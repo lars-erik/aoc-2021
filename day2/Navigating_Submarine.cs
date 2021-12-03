@@ -34,5 +34,39 @@ namespace day2
 
             Assert.AreEqual(1660158, pos * depth);
         }
+
+        [Test]
+        public void Yields_Product_Of_Position_And_Depth_From_Aim()
+        {
+            var input = new StreamReader(GetType().Assembly.GetManifestResourceStream("day2.input.txt")).ReadToEnd();
+            var instructions = input.Split(Environment.NewLine).Select(x => {
+                var parts = x.Split(' ');
+                var instruction = (instruction:parts[0], length:Convert.ToInt32(parts[1]));
+                return instruction;
+            }).ToArray();
+
+            var pos = 0;
+            var depth = 0;
+            var aim = 0;
+
+            var ops = new Dictionary<string, Action<int>> {
+                { 
+                    "forward", 
+                    x => {
+                        pos += x;
+                        depth += x * aim;
+                    } 
+                },
+                { "up", x => aim -= x },
+                { "down", x => aim += x }
+            };
+
+            foreach(var instr in instructions)
+            {
+                ops[instr.instruction](instr.length);
+            }
+
+            Assert.AreEqual(0, pos * depth);
+        }
     }
 }
