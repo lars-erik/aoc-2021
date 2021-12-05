@@ -1,0 +1,147 @@
+﻿@page "/days/day1"
+@using day1
+@using common
+@inject IJSRuntime runtime;
+
+<pre>@Index</pre>
+<BECanvas Width="300" Height="400" @ref="canvasReference"></BECanvas>
+
+@code {
+
+    protected BECanvasComponent canvasReference;
+    private Canvas2DContext context;
+
+    protected WindowDimension dimensions;
+    protected int[] Measures;
+    protected int Index;
+    protected double RayRatio;
+    protected double IndexRatio;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Measures = Resources.GetResourceLines(typeof(Measuring_Depth), "day1.p1.txt").Select(x => Convert.ToInt32(x)).ToArray();
+
+        await Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dimensions = await runtime.InvokeAsync<WindowDimension>("containerSize");
+            var max = Measures.Max();
+            RayRatio = (double)dimensions.Height / max;
+            IndexRatio = (double) dimensions.Width / Measures.Length;
+
+            context = await canvasReference.CreateCanvas2DAsync();
+
+            await DrawBackground();
+
+            var centerY = dimensions.Height / 2;
+            var subX = dimensions.Width * .2;
+            var subY = dimensions.Height * .2;
+
+            await DrawSubmarine(subY, subX);
+
+            await runtime.InvokeVoidAsync("init", DotNetObjectReference.Create(this));
+
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async ValueTask Update(double timeStamp)
+    {
+        Index = (int)Math.Floor(timeStamp / 10);
+        var subX = dimensions.Width * .2;
+        var subTop = dimensions.Height * .2;
+        if (Index < Measures.Length)
+        {
+            var x = 2 * Index;
+            await context.BeginPathAsync();
+            await context.SetStrokeStyleAsync("rgba(255, 30, 30, 0.3)");
+            await context.MoveToAsync(subX, subTop + 55);
+            await context.LineToAsync(Index * IndexRatio * .9, subTop + 55 + Measures[Index] * RayRatio * .7);
+            await context.StrokeAsync();
+            StateHasChanged();
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task DrawBackground()
+    {
+        var gdt = await runtime.InvokeAsync<IJSInProcessObjectReference>(
+            "createLinearGradient",
+            context,
+            0, 0, 0, dimensions.Height,
+            new[]
+            {
+                new object[] {0, "blue"},
+                new object[] {1, "black"},
+                        }
+            );
+
+        await context.SetFillStyleAsync(gdt);
+        await context.FillRectAsync(0, 0, dimensions.Width, dimensions.Height);
+    }
+
+    private async Task DrawSubmarine(double subY, double subX)
+    {
+        var bodyGrad = await runtime.InvokeAsync<IJSInProcessObjectReference>(
+            "createLinearGradient",
+            context,
+            0, subY - 50, 0, subY + 50,
+            new[]
+            {
+                new object[] {0, "yellow"},
+                new object[] {.4, "#FFFFBB"},
+                new object[] {.6, "#FFFFBB"},
+                new object[] {1, "yellow"}
+                    }
+            );
+
+        await context.BeginPathAsync();
+        await context.RectAsync(subX - 149, subY - 50, 150, 100);
+        await context.SetFillStyleAsync(bodyGrad);
+        await context.FillAsync();
+        await context.StrokeAsync();
+
+        var frontGrad = await runtime.InvokeAsync<IJSInProcessObjectReference>(
+            "createRadialGradient",
+            context,
+            subX, subY, 10, subX, subY, 50,
+            new[]
+            {
+                new object[] {0, "#FFFFBB"},
+                new object[] {1, "yellow"}
+                    }
+            );
+
+        await context.BeginPathAsync();
+        await context.SetFillStyleAsync(frontGrad);
+        await context.SetStrokeStyleAsync("black");
+        await context.ArcAsync(
+            subX,
+            subY,
+            50,
+            Math.PI / 2,
+            Math.PI / -2,
+            true
+            );
+        await context.FillAsync();
+        await context.StrokeAsync();
+    }
+
+    public class WindowDimension
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Width} x {Height}";
+        }
+    }
+
+}

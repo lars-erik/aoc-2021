@@ -31,7 +31,7 @@ namespace day1
             Assert.AreEqual(1523, increases);
         }
 
-        private static int CountIncreases(int[] measures)
+        public static int CountIncreases(int[] measures)
         {
             var increases = 0;
             for (var i = 1; i < measures.Length; i++)
