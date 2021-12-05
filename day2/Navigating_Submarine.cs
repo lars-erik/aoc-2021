@@ -1,3 +1,4 @@
+using common;
 using System;
 using System.IO;
 using System.Linq;
@@ -11,8 +12,7 @@ namespace day2
         [Test]
         public void Yields_Product_Of_Position_And_Depth()
         {
-            var input = new StreamReader(GetType().Assembly.GetManifestResourceStream("day2.input.txt")).ReadToEnd();
-            var instructions = input.Split(Environment.NewLine).Select(x => {
+            var instructions = Resources.GetResourceLines(GetType(), "day2.input.txt").Select(x => {
                 var parts = x.Split(' ');
                 var instruction = (instruction:parts[0], length:Convert.ToInt32(parts[1]));
                 return instruction;
@@ -38,8 +38,7 @@ namespace day2
         [Test]
         public void Yields_Product_Of_Position_And_Depth_From_Aim()
         {
-            var input = new StreamReader(GetType().Assembly.GetManifestResourceStream("day2.input.txt")).ReadToEnd();
-            var instructions = input.Split(Environment.NewLine).Select(x => {
+            var instructions = Resources.GetResourceLines(GetType(), "day2.input.txt").Select(x => {
                 var parts = x.Split(' ');
                 var instruction = (instruction:parts[0], length:Convert.ToInt32(parts[1]));
                 return instruction;
