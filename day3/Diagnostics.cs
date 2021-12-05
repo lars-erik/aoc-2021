@@ -17,7 +17,7 @@ namespace day3
         }
 
         [TestCase("day3.sample.txt", (uint)0b_1_0000, 230)]
-        [TestCase("day3.input.txt", (uint)0b_1000_0000_0000, 0)]
+        [TestCase("day3.input.txt", (uint)0b_1000_0000_0000, 4550283)]
         public void Of_Life_Support_Rating_Is_OxyGen_Times_Co2Scrub(string resource, uint maxBit, int expected)
         {
             var numbers = GetResourceBinaries(resource);
