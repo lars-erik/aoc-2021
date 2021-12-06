@@ -7,12 +7,11 @@ namespace day6
 {
     public class Lantern_Fish
     {
-        [TestCase("day6.sample.txt", 5934)]
-        [TestCase("day6.input.txt", 372984)]
-        public void Multiply_Exponentially(string resource, int expected)
+        [TestCase("day6.sample.txt", 5934, 80)]
+        [TestCase("day6.input.txt", 372984, 80)]
+        [TestCase("day6.sample.txt", 5934, 256, Category = "Slow")]
+        public void Multiply_Exponentially(string resource, int expected, int daysToRun)
         {
-            const int daysToRun = 80;
-
             var lines = Resources.GetResourceLines(typeof(Lantern_Fish), resource);
             var data = lines[0];
             var fish = data.Split(',').Select(x => Convert.ToInt16(x)).ToList();
