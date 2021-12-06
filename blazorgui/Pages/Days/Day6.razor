@@ -1,0 +1,93 @@
+﻿@page "/days/day6"
+@using day1
+@using common
+@using day6
+@inject IJSRuntime runtime;
+
+<BECanvas Width="300" Height="400" @ref="canvasReference"></BECanvas>
+
+@code {
+    protected BECanvasComponent canvasReference;
+    private Canvas2DContext context;
+
+    protected WindowDimension dimensions;
+
+    private Dictionary<int, long> Fish;
+    private Dictionary<int, long> NextFish;
+    private CommonShapes commonShapes;
+
+    private double lastTick;
+    private int index = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Fish = Lantern_Fish.GetInitialFish("day6.sample.txt");
+        NextFish = Lantern_Fish.Multiply(Fish);
+
+        await Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dimensions = await runtime.InvokeAsync<WindowDimension>("containerSize");
+            context = await canvasReference.CreateCanvas2DAsync();
+
+            commonShapes = new CommonShapes(context, dimensions, runtime);
+
+            await commonShapes.DrawBackground();
+
+
+            await runtime.InvokeVoidAsync("init", DotNetObjectReference.Create(this));
+
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async ValueTask Update(double timeStamp)
+    {
+        const int timePerDay = 100;
+        if (timeStamp > lastTick + timePerDay)
+        {
+            lastTick = timeStamp;
+            index++;
+
+            Fish = NextFish;
+            NextFish = Lantern_Fish.Multiply(Fish);
+        }
+        var delta = (timeStamp - lastTick) / timePerDay;
+        var smoothDelta = Utilities.SmoothStep(0, 1, delta);
+        var thisMaxCount = Fish.Values.Max();
+        var maxCount = NextFish.Values.Max();
+        var ratio = (double)(dimensions.Width - 140) / (thisMaxCount + (maxCount - thisMaxCount) * smoothDelta);
+
+        await commonShapes.DrawBackground();
+        await context.SaveAsync();
+
+        await context.TranslateAsync(0.5, 0.5);
+
+        await context.SetFillStyleAsync("white");
+        await context.SetFontAsync("20pt sans-serif");
+        var text = $"Max age pop: {maxCount:n0}";
+        var metrics = await context.MeasureTextAsync(text);
+        await context.FillTextAsync(text, dimensions.Width - metrics.Width - 50, 530);
+        await context.FillTextAsync($"Total: {NextFish.Values.Sum():n0}, day {index:n0}", 50, 530);
+
+        for (var i = 0; i < 9; i++)
+        {
+            await context.SetFillStyleAsync("white");
+            await context.FillTextAsync(i.ToString(), 50, 50 + i * 50);
+
+            await context.FillRectAsync(80, 25 + i * 50, (Fish[i] + (NextFish[i] - Fish[i]) * smoothDelta) * ratio, 50);
+
+            await context.SetFillStyleAsync("black");
+            await context.FillTextAsync($"{Fish[i]:n0}", 100, 50 + i * 50);
+        }
+
+        await context.RestoreAsync();
+        await Task.CompletedTask;
+    }
+
+}

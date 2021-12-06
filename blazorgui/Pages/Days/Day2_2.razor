@@ -87,7 +87,7 @@
             NextStatus = submarine.ExecuteInstruction(curInstr, PrevStatus);
             lengthOfOp = durationStep * (curInstr.instruction == "forward" ? curInstr.length * NextStatus.aim : curInstr.length);
         }
-        var timeRatio = SmoothStep(0, 1, timePassed / lengthOfOp);
+        var timeRatio = Utilities.SmoothStep(0, 1, timePassed / lengthOfOp);
 
         ViewData = (
             pos: PrevStatus.pos + (NextStatus.pos - PrevStatus.pos) * timeRatio,
@@ -113,12 +113,6 @@
         StateHasChanged();
 
         await Task.CompletedTask;
-    }
-
-    private double SmoothStep(double min, double max, double val)
-    {
-        val = Math.Min(Math.Max((val - min) / (max - min), 0), 1);
-        return val * val * (3 - 2 * val);
     }
 
     private async Task DrawGrid()
