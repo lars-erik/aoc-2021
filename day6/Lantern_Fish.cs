@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using common;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace day6
@@ -9,29 +11,46 @@ namespace day6
     {
         [TestCase("day6.sample.txt", 5934, 80)]
         [TestCase("day6.input.txt", 372984, 80)]
-        [TestCase("day6.sample.txt", 5934, 256, Category = "Slow")]
-        public void Multiply_Exponentially(string resource, int expected, int daysToRun)
+        [TestCase("day6.sample.txt", 26984457539, 256)]
+        [TestCase("day6.input.txt", 1681503251694, 256)]
+        public void Multiply_Exponentially(string resource, long expected, int daysToRun)
         {
             var lines = Resources.GetResourceLines(typeof(Lantern_Fish), resource);
             var data = lines[0];
-            var fish = data.Split(',').Select(x => Convert.ToInt16(x)).ToList();
+            var fish = Enumerable.Range(0, 9).ToDictionary(x => x, x => (long)0);
+            var inputFish = data.Split(',')
+                .Select(x => Convert.ToInt32(x))
+                .GroupBy(x => x)
+                .ToDictionary(x => x.Key, x => x.Count());
 
-            for (var d = 0; d < daysToRun; d++)
+            foreach (var key in fish.Keys)
             {
-                var fishCount = fish.Count;
-                for (var f = 0; f < fishCount; f++)
+                if (inputFish.TryGetValue(key, out int val))
                 {
-                    var it = fish[f];
-                    fish[f]--;
-                    if (fish[f] == -1)
-                    {
-                        fish[f] = 6;
-                        fish.Add(8);
-                    }
+                    fish[key] = val;
                 }
             }
 
-            Assert.AreEqual(expected, fish.Count);
+            for (var d = 0; d < daysToRun; d++)
+            {
+                fish = new Dictionary<int, long>
+                {
+                    {0, fish[1]},
+                    {1, fish[2]},
+                    {2, fish[3]},
+                    {3, fish[4]},
+                    {4, fish[5]},
+                    {5, fish[6]},
+                    {6, fish[7] + fish[0]},
+                    {7, fish[8]},
+                    {8, fish[0]},
+                };
+            }
+
+            var totalFish = fish.Sum(x => (long)x.Value);
+            fish.Add(99, totalFish);
+            Console.Write(JsonConvert.SerializeObject(fish, Formatting.Indented));
+            Assert.AreEqual(expected, totalFish);
         }
     }
 }
