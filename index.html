@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>blazorgui</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="blazorgui.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/Blazor.Extensions.Canvas/blazor.extensions.canvas.js"></script>
+    <script type="text/javascript">
+        window.containerSize = function () {
+            let canvas = document.getElementsByTagName("canvas")[0];
+            let parent = canvas.parentElement;
+            let size = { width: parent.offsetWidth, height: parent.offsetHeight };
+            canvas.width = size.width;
+            canvas.height = size.height;
+            return size;
+        };
+
+        window.createLinearGradient = function (ctx, x0, y0, x1, y1, colorStops) {
+            ctx = ctx.canvas.getContext("2d");
+            let grd = ctx.createLinearGradient(x0, y0, x1, y1);
+            for (var i = 0; i < colorStops.length; i++) {
+                let stop = colorStops[i];
+                grd.addColorStop(stop[0], stop[1]);
+            }
+            return grd;
+        }
+
+        window.createRadialGradient = function (ctx, x0, y0, r0, x1, y1, r1, colorStops) {
+            ctx = ctx.canvas.getContext("2d");
+            let grd = ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+            for (var i = 0; i < colorStops.length; i++) {
+                let stop = colorStops[i];
+                grd.addColorStop(stop[0], stop[1]);
+            }
+            return grd;
+        }
+
+        window.mainComponent = null;
+
+        function init(component) {
+            window.mainComponent = component;
+            requestAnimationFrame(update);
+        }
+
+        function update(timeStamp) {
+            window.mainComponent.invokeMethodAsync('Update', timeStamp);
+            requestAnimationFrame(update);
+        }
+    </script>
+</body>
+
+</html>
