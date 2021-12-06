@@ -1,0 +1,164 @@
+﻿@page "/days/day2_2"
+@using day2
+@using common
+@inject IJSRuntime runtime;
+
+<pre style="position: absolute; top: 10px; left: 10px; color: white;">@Index @ViewData.pos.ToString("n2") @ViewData.depth.ToString("n2") @ViewData.aim.ToString("n2")</pre>
+
+<BECanvas Width="300" Height="400" @ref="canvasReference"></BECanvas>
+
+
+@code {
+
+    protected BECanvasComponent canvasReference;
+    private Canvas2DContext context;
+
+    protected WindowDimension dimensions;
+    protected (string instruction, int length)[] Instructions;
+
+    protected (int pos, int depth, int aim) PrevStatus = (0, 0, 0);
+    protected (double pos, double depth, double aim) ViewData = (0, 0, 0);
+    protected (int pos, int depth, int aim) NextStatus = (0, 0, 0);
+
+    private CommonShapes commonShapes;
+    private Submarine submarine;
+
+    private double prevSwitchAt = 0;
+    protected int Index = 0;
+
+    // Needed ?
+    protected double RayRatio;
+    protected double IndexRatio;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Instructions = Navigating_Submarine.GetInstructions();
+        submarine = new Submarine(Submarine.ComplexInstructions);
+
+        await Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dimensions = await runtime.InvokeAsync<WindowDimension>("containerSize");
+
+            context = await canvasReference.CreateCanvas2DAsync();
+
+            commonShapes = new CommonShapes(context, dimensions, runtime);
+
+            await commonShapes.DrawBackground();
+
+            var subX = 0;
+            var subY = 0;
+
+            await context.SaveAsync();
+
+            await context.TranslateAsync(dimensions.Width * 0.2, dimensions.Height * 0.2);
+            await commonShapes.DrawSubmarine();
+
+            await context.RestoreAsync();
+
+            NextStatus = submarine.ExecuteInstruction(Instructions[Index], PrevStatus);
+
+            await runtime.InvokeVoidAsync("init", DotNetObjectReference.Create(this));
+
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    [JSInvokable]
+    public async ValueTask Update(double timeStamp)
+    {
+        var timePassed = timeStamp - prevSwitchAt;
+        var curInstr = Instructions[Index];
+        var durationStep = curInstr.instruction == "forward" ? 50 : 100;
+        var lengthOfOp = durationStep * (curInstr.instruction == "forward" ? curInstr.length * NextStatus.aim : curInstr.length);
+        if (timePassed > lengthOfOp)
+        {
+            prevSwitchAt = timeStamp;
+            timePassed = 0;
+            Index++;
+            PrevStatus = NextStatus;
+            curInstr = Instructions[Index];
+            NextStatus = submarine.ExecuteInstruction(curInstr, PrevStatus);
+            lengthOfOp = durationStep * (curInstr.instruction == "forward" ? curInstr.length * NextStatus.aim : curInstr.length);
+        }
+        var timeRatio = SmoothStep(0, 1, timePassed / lengthOfOp);
+
+        ViewData = (
+            pos: PrevStatus.pos + (NextStatus.pos - PrevStatus.pos) * timeRatio,
+            depth: PrevStatus.depth + (NextStatus.depth - PrevStatus.depth) * timeRatio,
+            aim: PrevStatus.aim + (NextStatus.aim - PrevStatus.aim) * timeRatio
+        );
+
+        var stepSize = dimensions.Height * .2;
+
+        await commonShapes.DrawBackground();
+
+        await context.SaveAsync();
+        await context.TranslateAsync(dimensions.Width * .2 - stepSize, 0);
+        await DrawGrid();
+        await context.RestoreAsync();
+
+        await context.SaveAsync();
+        await context.TranslateAsync(dimensions.Width * 0.2, dimensions.Height * 0.2);
+        await context.RotateAsync((float)ViewData.aim / ((float)Math.PI * 20));
+        await commonShapes.DrawSubmarine();
+        await context.RestoreAsync();
+
+        StateHasChanged();
+
+        await Task.CompletedTask;
+    }
+
+    private double SmoothStep(double min, double max, double val)
+    {
+        val = Math.Min(Math.Max((val - min) / (max - min), 0), 1);
+        return val * val * (3 - 2 * val);
+    }
+
+    private async Task DrawGrid()
+    {
+        var upperDepth = (int)Math.Floor(ViewData.depth) - 1;
+        var leftmostPos = (int)Math.Floor(ViewData.pos) - 2;
+
+        await context.SaveAsync();
+
+        var stepSize = dimensions.Height * .1;
+
+        var xFrac = ViewData.pos - (int)Math.Floor(ViewData.pos);
+        var yFrac = ViewData.depth - (int)Math.Floor(ViewData.depth);
+
+        await context.TranslateAsync(stepSize * xFrac * -1, stepSize * yFrac * -1);
+
+        await context.SetFillStyleAsync("green");
+        await context.SetStrokeStyleAsync("green");
+        await context.SetFontAsync("bold 16pt sans-serif");
+
+        double d = upperDepth - 3;
+        for (var y = 0.0 - stepSize * 3; y < dimensions.Height + stepSize * 20; y += stepSize)
+        {
+            await context.FillTextAsync((d++).ToString("n0"), stepSize + 10, y - 15);
+            await context.MoveToAsync(stepSize * -3, y);
+            await context.LineToAsync(dimensions.Width + stepSize * 3, y);
+        }
+
+        d = leftmostPos - 3;
+        for (double x = 0.0 - stepSize * 3; x < dimensions.Width + stepSize * 20; x += stepSize)
+        {
+            await context.FillTextAsync((d++).ToString("n0"), x + 10, (stepSize * 2) + 25);
+            await context.MoveToAsync(x, stepSize * -3);
+            await context.LineToAsync(x, dimensions.Height + stepSize * 3);
+        }
+
+        await context.SetLineWidthAsync(5);
+        await context.StrokeAsync();
+
+        await context.RestoreAsync();
+    }
+
+}

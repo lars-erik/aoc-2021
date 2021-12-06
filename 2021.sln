@@ -9,13 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day2", "day2\day2.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day3", "day3\day3.csproj", "{CF4B56BD-F9DC-435A-B363-7AEFBB28938C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day4", "day4\day4.csproj", "{D1CFB461-2CED-4DDB-BACA-28AA7006CA81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day4", "day4\day4.csproj", "{D1CFB461-2CED-4DDB-BACA-28AA7006CA81}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "common", "common\common.csproj", "{FBCB18AA-F794-4943-847B-4BA3F4F7D262}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day5", "day5\day5.csproj", "{7201EF1D-A495-4F8F-A1A0-D1D1A14F4131}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day5", "day5\day5.csproj", "{7201EF1D-A495-4F8F-A1A0-D1D1A14F4131}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "blazorgui", "blazorgui\blazorgui.csproj", "{4A81AE54-B3F1-4DC5-9422-726841C0F3E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "blazorgui", "blazorgui\blazorgui.csproj", "{4A81AE54-B3F1-4DC5-9422-726841C0F3E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

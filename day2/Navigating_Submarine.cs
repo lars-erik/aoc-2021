@@ -2,7 +2,6 @@ using common;
 using System;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using NUnit.Framework;
 
 namespace day2
@@ -12,60 +11,30 @@ namespace day2
         [Test]
         public void Yields_Product_Of_Position_And_Depth()
         {
-            var instructions = Resources.GetResourceLines(GetType(), "day2.input.txt").Select(x => {
-                var parts = x.Split(' ');
-                var instruction = (instruction:parts[0], length:Convert.ToInt32(parts[1]));
-                return instruction;
-            }).ToArray();
+            var instructions = GetInstructions();
 
-            var pos = 0;
-            var depth = 0;
+            var location = new Submarine(Submarine.SimpleStrategies).ExecuteInstructions(instructions);
 
-            var ops = new Dictionary<string, Action<int>> {
-                { "forward", x => pos += x },
-                { "up", x => depth -= x },
-                { "down", x => depth += x }
-            };
-
-            foreach(var instr in instructions)
-            {
-                ops[instr.instruction](instr.length);
-            }
-
-            Assert.AreEqual(1660158, pos * depth);
+            Assert.AreEqual(1660158, location.pos * location.depth);
         }
 
         [Test]
         public void Yields_Product_Of_Position_And_Depth_From_Aim()
         {
-            var instructions = Resources.GetResourceLines(GetType(), "day2.input.txt").Select(x => {
+            var instructions = GetInstructions();
+
+            var location = new Submarine(Submarine.ComplexInstructions).ExecuteInstructions(instructions);
+
+            Assert.AreEqual(1604592846, location.pos * location.depth);
+        }
+
+        public static (string instruction, int length)[] GetInstructions()
+        {
+            return Resources.GetResourceLines(typeof(Navigating_Submarine), "day2.input.txt").Select(x => {
                 var parts = x.Split(' ');
                 var instruction = (instruction:parts[0], length:Convert.ToInt32(parts[1]));
                 return instruction;
             }).ToArray();
-
-            var pos = 0;
-            var depth = 0;
-            var aim = 0;
-
-            var ops = new Dictionary<string, Action<int>> {
-                { 
-                    "forward", 
-                    x => {
-                        pos += x;
-                        depth += x * aim;
-                    } 
-                },
-                { "up", x => aim -= x },
-                { "down", x => aim += x }
-            };
-
-            foreach(var instr in instructions)
-            {
-                ops[instr.instruction](instr.length);
-            }
-
-            Assert.AreEqual(0, pos * depth);
         }
     }
 }
