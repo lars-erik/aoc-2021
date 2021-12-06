@@ -1,0 +1,79 @@
+﻿@page "/days/day5"
+@inherits CanvasComponentBase
+@using common
+@using day5
+
+<BECanvas Width="300" Height="400" @ref="canvasReference"></BECanvas>
+
+@code {
+
+    private double lastTick = 0;
+    private int index;
+    private Hypothermal_Vents.Area segments;
+    private (int X1, int Y1, int X2, int Y2) containingArea;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var inputData = Resources.GetResourceLines(typeof(Hypothermal_Vents), "day5.input.txt");
+        segments = Hypothermal_Vents.Parse(inputData);
+        containingArea = segments.GetAreaRect();
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task DrawInitialCanvas()
+    {
+        await context.SetFillStyleAsync("black");
+        await context.FillRectAsync(0, 0, dimensions.Width, dimensions.Height);
+        await context.SetFontAsync("20pt sans-serif");
+        //await commonShapes.DrawBackground();
+    }
+
+    [JSInvokable]
+    public override async ValueTask Update(double timeStamp)
+    {
+        if (index >= segments.Count)
+        {
+            return;
+        }
+
+        const int timePerDay = 200;
+        if (timeStamp > lastTick + timePerDay)
+        {
+            lastTick = timeStamp;
+            index++;
+        }
+
+        var yellow = (256.0 / segments.Count * index).ToString("#");
+
+        //await context.BeginPathAsync();
+        //for (var i = 0; i < index; i++)
+        //{
+        //    await context.MoveToAsync(segments[i].From.X, segments[i].From.Y);
+        //    await context.LineToAsync(segments[i].To.X, segments[i].To.Y);
+        //}
+        //await context.ClosePathAsync();
+        //await context.StrokeAsync();
+
+        var delta = (timeStamp - lastTick) / timePerDay;
+        var smoothDelta = Utilities.SmoothStep(0, 1, delta);
+
+        var segment = segments[index];
+        await context.SetStrokeStyleAsync($"rgba(255, {yellow}, 20, .03)");
+        await context.BeginPathAsync();
+        await context.MoveToAsync(segment.From.X, segment.From.Y);
+        await context.LineToAsync(segment.From.X + (segment.To.X - segment.From.X) * smoothDelta, segment.From.Y + (segment.To.Y - segment.From.Y) * smoothDelta);
+        await context.ClosePathAsync();
+        await context.StrokeAsync();
+
+        var text = $"{index + 1 :000} / {segments.Count}";
+        var textMeasure = await context.MeasureTextAsync(text);
+        await context.SetFillStyleAsync($"black");
+        await context.FillRectAsync(0, containingArea.Y2 - 50, textMeasure.Width + 30, 50);
+        await context.SetFillStyleAsync($"rgba(255, {yellow}, 20, 1)");
+        await context.FillTextAsync(text, 15, containingArea.Y2 - 20);
+
+        await Task.CompletedTask;
+    }
+
+}

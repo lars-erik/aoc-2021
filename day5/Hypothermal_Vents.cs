@@ -18,7 +18,7 @@ namespace day5
             var allSegments = Parse(inputData);
             var segments = allSegments.Where(x => x.IsStraight).ToArray();
 
-            var overlaps = CountOverlaps(draw, segments);
+            var overlaps = CountOverlaps(draw, new Area(segments));
 
             Assert.AreEqual(expected, overlaps);
         }
@@ -28,23 +28,18 @@ namespace day5
         public void Are_Best_Avoided_When_Overlapping_Including_Diagonal(string input, int expected, bool draw)
         {
             var inputData = Resources.GetResourceLines(GetType(), input);
-            var allSegments = Parse(inputData);
+            var allSegments = new Area(Parse(inputData));
             
-            var overlaps = CountOverlaps(draw, allSegments.ToArray());
+            var overlaps = CountOverlaps(draw, allSegments);
 
             Assert.AreEqual(expected, overlaps);
         }
 
-        private static int CountOverlaps(bool draw, Line[] segments)
+        private static int CountOverlaps(bool draw, Area segments)
         {
             var overlaps = 0;
 
-            var area = (
-                X1: segments.Min(x => x.MinX),
-                Y1: segments.Min(x => x.MinY),
-                X2: segments.Max(x => x.MaxX),
-                Y2: segments.Max(x => x.MaxY)
-            );
+            var area = segments.GetAreaRect();
 
             for (var y = area.Y1; y <= area.Y2; y++)
             {
@@ -98,12 +93,12 @@ namespace day5
             Assert.AreEqual(expected, line.Intersects(new Point(px, py)));
         }
 
-        private Area Parse(string[] inputData)
+        public static Area Parse(string[] inputData)
         {
             return new Area(inputData.Select(ParseLine));
         }
 
-        private Line ParseLine(string arg)
+        private static Line ParseLine(string arg)
         {
             var parts = arg.Split(" -> ");
             var xy1 = ParsePoint(parts[0]);
@@ -111,13 +106,13 @@ namespace day5
             return new Line(xy1, xy2);
         }
 
-        private Point ParsePoint(string part)
+        private static Point ParsePoint(string part)
         {
             var parts = part.Split(',');
             return new Point(ToInt32(parts[0]), ToInt32(parts[1]));
         }
 
-        class Area : List<Line>
+        public class Area : List<Line>
         {
             public Area()
             {
@@ -126,11 +121,22 @@ namespace day5
             public Area(IEnumerable<Line> collection) : base(collection)
             {
             }
+
+            public (int X1, int Y1, int X2, int Y2) GetAreaRect()
+            {
+                var area = (
+                    X1: this.Min(x => x.MinX),
+                    Y1: this.Min(x => x.MinY),
+                    X2: this.Max(x => x.MaxX),
+                    Y2: this.Max(x => x.MaxY)
+                );
+                return area;
+            }
         }
 
-        record Point(int X, int Y);
+        public record Point(int X, int Y);
 
-        record Line
+        public record Line
         {
             public readonly Point From;
             public readonly Point To;

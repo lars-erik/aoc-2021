@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day5", "day5\day5.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "blazorgui", "blazorgui\blazorgui.csproj", "{4A81AE54-B3F1-4DC5-9422-726841C0F3E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day6", "day6\day6.csproj", "{2701823D-FFD7-4212-855A-62B167437780}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day6", "day6\day6.csproj", "{2701823D-FFD7-4212-855A-62B167437780}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
