@@ -42,5 +42,42 @@ namespace day7
             Assert.AreEqual(expectedPosition, curBestPos);
             Assert.AreEqual(expectedFuel, curBestFuel);
         }
+
+        [TestCase("day7.sample.txt", 5, 168)]
+        [TestCase("day7.input.txt", 500, 104149091)]
+        public void Using_NBang_Fuel_Consumes_Least_Fuel_At_Given_Position(string resource, int expectedPosition, decimal expectedFuel)
+        {
+            var positions = Resources.GetSeparatedIntegers(GetType(), resource);
+
+            var minPos = positions.Min();
+            var maxPos = positions.Max();
+
+            Console.WriteLine($"min: {minPos}, max: {maxPos}, count: {positions.Length}");
+
+            var curBestPos = -1;
+            var curBestFuel = decimal.MaxValue;
+
+            for (var testedPos = minPos; testedPos <= maxPos; testedPos++)
+            {
+                var curFuel = 0m;
+                for (var position = 0; position < positions.Length; position++)
+                {
+                    var simpleDist = Math.Abs(positions[position] - testedPos);
+                    var dist = (simpleDist * (simpleDist + 1)) / 2;
+                    curFuel += dist;
+                }
+
+                if (curFuel < curBestFuel)
+                {
+                    curBestPos = testedPos;
+                    curBestFuel = curFuel;
+                }
+            }
+
+            Console.WriteLine($"Found best position {curBestPos} at {curBestFuel} fuel.");
+
+            Assert.AreEqual(expectedPosition, curBestPos);
+            Assert.AreEqual(expectedFuel, curBestFuel);
+        }
     }
 }
