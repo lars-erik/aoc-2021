@@ -47,11 +47,8 @@ namespace day6
 
         public static Dictionary<int, long> GetInitialFish(string resource)
         {
-            var lines = Resources.GetResourceLines(typeof(Lantern_Fish), resource);
-            var data = lines[0];
             var fish = Enumerable.Range(0, 9).ToDictionary(x => x, x => (long) 0);
-            var inputFish = data.Split(',')
-                .Select(x => Convert.ToInt32(x))
+            var inputFish = Resources.GetSeparatedIntegers(typeof(Lantern_Fish), resource)
                 .GroupBy(x => x)
                 .ToDictionary(x => x.Key, x => x.Count());
 

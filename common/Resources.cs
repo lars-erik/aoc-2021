@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace common
 {
@@ -10,6 +11,16 @@ namespace common
             var input = new StreamReader(type.Assembly.GetManifestResourceStream(name)).ReadToEnd();
             string[] lines = input.Split(Environment.NewLine);
             return lines;
+        }
+
+        public static int[] GetIntegerFromLines(Type owningType, string resourceName)
+        {
+            return Resources.GetResourceLines(owningType, resourceName).Select(x => Convert.ToInt32(x)).ToArray();
+        }
+
+        public static int[] GetSeparatedIntegers(Type owningType, string resourceName)
+        {
+            return Resources.GetResourceLines(owningType, resourceName).First().Split(',').Select(x => Convert.ToInt32(x)).ToArray();
         }
     }
 }

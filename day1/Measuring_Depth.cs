@@ -11,7 +11,7 @@ namespace day1
         [Test]
         public void Counts_Increases()
         {
-            var measures = Resources.GetResourceLines(GetType(), "day1.p1.txt").Select(x => Convert.ToInt32(x)).ToArray();
+            var measures = Resources.GetIntegerFromLines(GetType(), "day1.p1.txt");
             int increases = CountIncreases(measures);
 
             Assert.AreEqual(1477, increases);
@@ -20,7 +20,7 @@ namespace day1
         [Test]
         public void Counts_Group_Increases()
         {
-            var measures = Resources.GetResourceLines(GetType(), "day1.p1.txt").Select(x => Convert.ToInt32(x)).ToArray();
+            var measures = Resources.GetIntegerFromLines(GetType(), "day1.p1.txt");
             var sums = new List<int>();
             for (var i = 0; i<measures.Length-2; i++) {
                 sums.Add(measures[i] + measures[i+1] + measures[i+2]);
