@@ -1,0 +1,74 @@
+﻿cdfeb fcadb cdfeb cdbaf
+
+ aaaa              aaaa            aaaa   
+b    c    b    c  b    c  b    c  b    c  
+b    c    b    c  b    c  b    c  b    c  
+ dddd      dddd    dddd    dddd    dddd   
+e    f    e    f       f  e    f       f  
+e    f    e    f       f  e    f       f  
+ gggg                                     
+
+ dddd      dddd    dddd    dddd    dddd   
+b    c    b    c  b    c  b    c  b    c  
+b    c    b    c  b    c  b    c  b    c  
+ aaaa              aaaa            aaaa   
+e    f    e    f       f  e    f       f  
+e    f    e    f       f  e    f       f  
+ gggg                                     
+
+ dddd      dddd    dddd    dddd    dddd   
+f    c    f    c  f    c  f    c  f    c  
+f    c    f    c  f    c  f    c  f    c  
+ aaaa              aaaa            aaaa   
+e    b    e    b       b  e    b       b  
+e    b    e    b       b  e    b       b  
+ gggg                                     
+
+ dddd      dddd    dddd    dddd    dddd   
+f    a    f       f    a  f       f    a  
+f    a    f       f    a  f       f    a  
+ cccc      cccc    cccc    cccc    cccc   
+e    b    e    b       b  e    b       b  
+e    b    e    b       b  e    b       b  
+ gggg                                     
+
+ dddd      dddd    dddd    dddd    dddd   
+c    a    c       c    a  c       c    a  
+c    a    c       c    a  c       c    a  
+ ffff      ffff    ffff    ffff    ffff   
+e    b    e    b       b  e    b       b  
+e    b    e    b       b  e    b       b  
+ gggg                                     
+
+ dddd      dddd    dddd    dddd    dddd   
+e    a    e            a  e            a  
+e    a    e            a  e            a  
+ ffff      ffff    ffff    ffff    ffff   
+c    b    c    b  c    b  c    b  c    b  
+c    b    c    b  c    b  c    b  c    b  
+ gggg                                     
+
+ dddd      dddd    dddd    dddd    dddd   
+e    a    e            a  e            a  
+e    a    e            a  e            a  
+ ffff      ffff    ffff    ffff    ffff   
+g    b         b       b       b       b  
+g    b         b       b       b       b  
+ cccc      cccc    cccc    cccc    cccc   
+
+ dddd      dddd    dddd    dddd    dddd   
+e    a    e            a  e            a  
+e    a    e            a  e            a  
+ ffff      ffff    ffff    ffff    ffff   
+g    b         b       b       b       b  
+g    b         b       b       b       b  
+ cccc      cccc    cccc    cccc    cccc   
+
+ dddd      dddd    dddd    dddd    dddd   
+e    a    e            a  e            a  
+e    a    e            a  e            a  
+ ffff      ffff    ffff    ffff    ffff   
+g    b         b       b       b       b  
+g    b         b       b       b       b  
+ cccc      cccc    cccc    cccc    cccc   
+
