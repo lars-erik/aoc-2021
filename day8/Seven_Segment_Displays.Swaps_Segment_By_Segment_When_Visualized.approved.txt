@@ -64,11 +64,3 @@ g    b         b       b       b       b
 g    b         b       b       b       b  
  cccc      cccc    cccc    cccc    cccc   
 
- dddd      dddd    dddd    dddd    dddd   
-e    a    e            a  e            a  
-e    a    e            a  e            a  
- ffff      ffff    ffff    ffff    ffff   
-g    b         b       b       b       b  
-g    b         b       b       b       b  
- cccc      cccc    cccc    cccc    cccc   
-

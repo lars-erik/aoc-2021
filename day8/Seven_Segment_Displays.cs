@@ -44,7 +44,8 @@ namespace day8
             long total = 0;
             foreach (var entry in entries)
             {
-                var display = entry.ConnectDisplay();
+                var connector = new DisplayConnector(entry);
+                var display = connector.ConnectDisplay();
 
                 total += display.Number;
 
@@ -67,7 +68,7 @@ namespace day8
 
         [Test]
         [TestCase("day8.simplesample.txt")]
-        [UseReporter(typeof(NUnitReporter))]
+        [UseReporter(typeof(VisualStudioReporter))]
         public void Swaps_Segment_By_Segment_When_Visualized(string resource)
         {
             var entries = Entry.ParseEntries(resource);
@@ -79,12 +80,13 @@ namespace day8
                 builder.AppendLine(Join(" ", entry.Digits.Select(x => x.PatternString)));
                 builder.AppendLine();
 
-                var display = entry.ConnectDisplay((digits, connections) =>
+                var connector = new DisplayConnector(entry);
+                using var enumerator = connector.ConnectSlowly().GetEnumerator();
+               
+                while(enumerator.MoveNext())
                 {
-                    DrawDigits(digits, connections, x => builder.Append(x));
-                });
-                
-                DrawDigits(display.Digits, display.Connections, x => builder.Append(x));
+                    DrawDigits(entry.Digits, enumerator.Current, x => builder.Append(x));
+                }
             }
 
             Console.WriteLine(builder.ToString());
@@ -261,80 +263,166 @@ namespace day8
         public static implicit operator Connections((char a, char b, char c, char d, char e, char f, char g) c) => new(c.a, c.b, c.c, c.d, c.e, c.f, c.g);
     }
 
-    public record Entry(Pattern[] Patterns, Pattern[] Digits)
+    public class DisplayConnector
     {
-        public Pattern SingleByLength(int length) => Patterns.Single(x => x.Length == length);
+        private bool created = false;
+        private bool enumerating = false;
 
-        public Pattern[] FindByLength(int length) => Patterns.Where(x => x.Length == length).ToArray();
+        private Entry entry;
+        private Pattern[] sorted;
+        private Dictionary<char, char> dc;
+        private Pattern[] fiveSegs;
+        private Pattern[] sixSegs;
+        private Pattern[] sixNine;
+        private char a;
+        private char b;
+        private char c;
+        private char d;
+        private char e;
+        private char f;
+        private char g;
+        private Display display;
+        private Connections connections;
 
-        public char MostCommonSegment() => Patterns.SelectMany(x => x.Segments).GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
+        public DisplayConnector(Entry entry)
+        {
+            this.entry = entry;
+            sorted = new Pattern[10];
+            dc = new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g' }.ToDictionary(x => x);
+            connections = Swap(dc, 'a', 'a');
+        }
+
+        public Display Display => display;
+
+        public Connections Connections => connections;
+
+        public IEnumerable<Connections> ConnectSlowly()
+        {
+            if (created || enumerating)
+            {
+                throw new Exception("Already connected. Create another connector.");
+            }
+            enumerating = true;
+
+            yield return connections;
+            connections = ConnectToA();
+            yield return connections;
+            connections = ConnectToF();
+            yield return connections;
+            connections = ConnectToC();
+            yield return connections;
+            connections = ConnectToD();
+            yield return connections;
+            connections = ConnectToB();
+            yield return connections;
+            connections = ConnectToE();
+            yield return connections;
+            connections = ConnectToG();
+            yield return connections;
+
+            display = new Display(sorted, (a, b, c, d, e, f, g), entry.Digits);
+        }
 
         public Display ConnectDisplay(Action<Pattern[], Connections> draw = null)
         {
-            void SwapAndDraw(Dictionary<char, char> dict, char logical, char actual)
+            if (created || enumerating)
             {
-                var newConnections = Swap(dict, logical, actual);
-                draw?.Invoke(Digits, newConnections);
+                throw new Exception("Already connected. Create another connector.");
             }
 
-            var sorted = new Pattern[10];
+            created = true;
 
-            var dc = new[] {'a', 'b', 'c', 'd', 'e', 'f', 'g'}.ToDictionary(x => x);
+            connections = ConnectToA();
+            draw?.Invoke(entry.Digits, connections);
 
-            var connections = (a: 'a', b: 'b', c: 'c', d: 'd', e: 'e', f: 'f', g: 'g');
-            draw?.Invoke(Digits, connections);
+            connections = ConnectToF();
+            draw?.Invoke(entry.Digits, connections);
 
-            sorted[1] = SingleByLength(2);
-            sorted[7] = SingleByLength(3);
-            sorted[4] = SingleByLength(4);
-            sorted[8] = SingleByLength(7);
-            var fiveSegs = FindByLength(5);
-            var sixSegs = FindByLength(6);
+            connections = ConnectToC();
+            draw?.Invoke(entry.Digits, connections);
 
-            var a = sorted[7].SubtractUnique(sorted[1]);
+            connections = ConnectToD();
+            draw?.Invoke(entry.Digits, connections);
 
-            SwapAndDraw(dc, 'a', a);
+            connections = ConnectToB();
+            draw?.Invoke(entry.Digits, connections);
 
-            var f = MostCommonSegment();
+            connections = ConnectToE();
+            draw?.Invoke(entry.Digits, connections);
 
-            SwapAndDraw(dc, 'f', f);
+            connections = ConnectToG();
+            draw?.Invoke(entry.Digits, connections);
 
-            var c = sorted[7].SubtractUnique(a, f);
+            display = new Display(sorted, (a, b, c, d, e, f, g), entry.Digits);
 
-            SwapAndDraw(dc, 'c', c);
+            return display;
+        }
 
+        private Connections ConnectToA()
+        {
+            sorted[1] = entry.SingleByLength(2);
+            sorted[7] = entry.SingleByLength(3);
+            sorted[4] = entry.SingleByLength(4);
+            sorted[8] = entry.SingleByLength(7);
+            fiveSegs = entry.FindByLength(5);
+            sixSegs = entry.FindByLength(6);
+
+            a = sorted[7].SubtractUnique(sorted[1]);
+            return Swap(dc, 'a', a);
+        }
+
+        private Connections ConnectToF()
+        {
+            f = entry.MostCommonSegment();
+            return Swap(dc, 'f', f);
+        }
+
+        private Connections ConnectToC()
+        {
+            c = sorted[7].SubtractUnique(a, f);
+
+            return Swap(dc, 'c', c);
+        }
+
+        private Connections ConnectToD()
+        {
             sorted[3] = sorted[7].MostSimilar(fiveSegs);
 
-            var d = (sorted[3] + sorted[4]).SubtractUnique(c, f);
+            d = (sorted[3] + sorted[4]).SubtractUnique(c, f);
 
-            SwapAndDraw(dc, 'd', d);
+            return Swap(dc, 'd', d);
+        }
 
+        private Connections ConnectToB()
+        {
             sorted[0] = sixSegs.Single(x => x.DoesNotHave(d));
 
-            var sixNine = sixSegs.Except(sorted[0]).ToArray();
+            sixNine = sixSegs.Except(sorted[0]).ToArray();
 
             sorted[9] = sorted[7].MostSimilar(sixNine);
             sorted[6] = sixNine.Except(sorted[9]).Single();
 
-            var b = sorted[4].SubtractUnique(sorted[3]);
+            b = sorted[4].SubtractUnique(sorted[3]);
 
-            SwapAndDraw(dc, 'b', b);
+            return Swap(dc, 'b', b);
+        }
 
+        private Connections ConnectToE()
+        {
             var twoFive = fiveSegs.Except(sorted[3]).ToArray();
             sorted[5] = twoFive.Single(x => x.Contains(f));
             sorted[2] = twoFive.Except(sorted[5]).Single();
 
-            var e = sorted[2].SubtractUnique(sorted[3]);
+            e = sorted[2].SubtractUnique(sorted[3]);
 
-            SwapAndDraw(dc, 'e', e);
+            return Swap(dc, 'e', e);
+        }
 
-            var g = new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g' }.SubtractUnique(a, b, c, d, e, f);
+        private Connections ConnectToG()
+        {
+            g = new[] {'a', 'b', 'c', 'd', 'e', 'f', 'g'}.SubtractUnique(a, b, c, d, e, f);
 
-            SwapAndDraw(dc, 'g', g);
-
-            var display = new Display(sorted, (a, b, c, d, e, f, g), Digits);
-
-            return display;
+            return Swap(dc, 'g', g);
         }
 
         private static Connections Swap(Dictionary<char, char> dc, char logical, char actual)
@@ -345,6 +433,15 @@ namespace day8
             dc[logical] = actual;
             return (a: dc['a'], b: dc['b'], c: dc['c'], d: dc['d'], e: dc['e'], f: dc['f'], g: dc['g']);
         }
+    }
+
+    public record Entry(Pattern[] Patterns, Pattern[] Digits)
+    {
+        public Pattern SingleByLength(int length) => Patterns.Single(x => x.Length == length);
+
+        public Pattern[] FindByLength(int length) => Patterns.Where(x => x.Length == length).ToArray();
+
+        public char MostCommonSegment() => Patterns.SelectMany(x => x.Segments).GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
 
         public static IEnumerable<Entry> ParseEntries(string resource)
         {
@@ -352,8 +449,8 @@ namespace day8
             var entries = lines.Select(line =>
             {
                 var parts = line.Split(" | ");
-                var patterns = parts[0].Split(' ').Select(x => new Pattern(x)).ToArray();
-                var digits = parts[1].Split(' ').Select(x => new Pattern(x)).ToArray();
+                var patterns = parts[0].Split(' ').Select(x => new Pattern(x.Trim())).ToArray();
+                var digits = parts[1].Split(' ').Select(x => new Pattern(x.Trim())).ToArray();
                 return new Entry(patterns, digits);
             });
             return entries;
@@ -373,7 +470,7 @@ namespace day8
             5 => new[] { 2, 3, 5 },
             6 => new[] { 0, 6, 9 },
             7 => new[] { 8 },
-            _ => throw new Exception("Incompatible segment string")
+            _ => throw new Exception($"Incompatible segment string '{PatternString}' ({PatternString.Length}) {String.Join(",", PatternString.ToCharArray())}")
         };
 
         public bool IsUnique => InitialCandidates.Length == 1;

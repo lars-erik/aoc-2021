@@ -1,0 +1,337 @@
+﻿@page "/days/day7"
+@inherits blazorgui.Components.CanvasComponentBase
+@using common
+@using day8
+
+<BECanvas Width="300" Height="400" @ref="canvasReference"></BECanvas>
+
+@code {
+
+    protected Entry[] Entries;
+    protected DisplayConnector Connector;
+    protected Entry Entry;
+    protected Pattern[] Digits;
+
+    Dictionary<char, string> colors = new()
+    {
+            { 'a', "rgba(240, 22, 16, 1)" },
+            { 'b', "rgba(247, 62, 20, 1)" },
+            { 'c', "rgba(224, 94, 29, 1)" },
+            { 'd', "rgba(247, 130, 20, 1)" },
+            { 'e', "rgba(237, 154, 19, 1)" },
+            { 'f', "rgba(247, 180, 22, 1)" },
+            { 'g', "rgba(255, 210, 20, 1)" },
+        };
+
+    string offColor = "rgba(20, 20, 20, 1)";
+
+    private static readonly (int width, int height) DigitSize = (width: 80, height: 160);
+    private const int digits = 4;
+    private const int outerPadding = 20;
+    private const int digitPadding = 20;
+    private (int width, int height) DisplaySize = (
+        width: outerPadding * 2
+               + (digits - 1) * digitPadding
+               + digits * DigitSize.width,
+        height: outerPadding * 2
+                + DigitSize.height
+    );
+
+    private double Spacing;
+    private double Size;
+    private int MiddleY;
+
+    double prevTick = 0;
+    int index = 0;
+    int tryIndex = 0;
+    int digitIndex = 0;
+    bool loadNext = false;
+    private IEnumerator<Connections> Enumerator;
+    private Connections connections;
+
+    FastNoiseLite noise = new FastNoiseLite();
+
+    private List<Display> results = new List<Display>();
+    private double timeStamp;
+
+    protected override async Task DrawInitialCanvas()
+    {
+        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2S);
+        //noise.SetFrequency(.015f);
+        //noise.SetDomainWarpAmp(10f);
+        //noise.SetFractalType(FastNoiseLite.FractalType.DomainWarpIndependent);
+        //noise.SetFractalOctaves(2);
+        //noise.SetFractalLacunarity(1);
+        //noise.SetFractalGain(.5f);
+
+        Entries = Entry.ParseEntries("day8.sample.txt").ToArray();
+        Entry = Entries[index];
+        Digits = Entry.Digits;
+        Connector = new DisplayConnector(Entry);
+
+        Spacing = DigitSize.width * .03;
+        Size = DigitSize.width * .15;
+        MiddleY = DigitSize.height / 2;
+
+        Enumerator = Connector.ConnectSlowly().GetEnumerator();
+        Enumerator.MoveNext();
+        connections = Enumerator.Current;
+
+        tryIndex = -1;
+
+        await context.SetFontAsync("18pt \"Bradley Hand ITC\"");
+
+        await DrawScene();
+    }
+
+    [JSInvokable]
+    public override async ValueTask Update(double timeStamp)
+    {
+        var perTick = 200;
+        var hold = 500;
+        this.timeStamp = timeStamp;
+        if ((timeStamp - perTick) > prevTick)
+        {
+            prevTick = timeStamp;
+
+            if (loadNext)
+            {
+                tryIndex = -1;
+                index++;
+                Entry = Entries[index];
+                Digits = Entry.Digits;
+                Connector = new DisplayConnector(Entry);
+                Enumerator = Connector.ConnectSlowly().GetEnumerator();
+                loadNext = false;
+            }
+
+            if (Enumerator.MoveNext())
+            {
+                tryIndex++;
+                connections = Enumerator.Current;
+            }
+            else if (index < Entries.Length - 1)
+            {
+                results.Add(Connector.Display);
+                tryIndex++;
+                connections = Enumerator.Current;
+                await DrawScene();
+                prevTick += hold;
+                loadNext = true;
+                return;
+            }
+            else
+            {
+                tryIndex = -1;
+                Entry = new Entry(new Pattern[0], new Pattern[]
+                {
+                    new Pattern("abcdefg"),
+                    new Pattern("abcdefg"),
+                    new Pattern("abcdefg"),
+                    new Pattern("abcdefg")
+                });
+            }
+        }
+
+        await DrawScene();
+
+        await Task.CompletedTask;
+    }
+
+    private async Task DrawScene()
+    {
+        await context.SaveAsync();
+
+        await DrawBackground();
+
+        await context.SaveAsync();
+
+        await context.TranslateAsync(150.5, 150.5);
+
+        await DrawDisplay();
+
+        await context.RestoreAsync();
+
+        await context.SaveAsync();
+        try
+        {
+            await context.TranslateAsync(600, 180);
+            await context.SetFillStyleAsync("white");
+            if (results.Any())
+            {
+                await context.FillTextAsync("Total: " + results.Select(x => x.Number).Sum().ToString("n0"), 0, 0);
+                var lineHeight = 28;
+                for (var i = results.Count - 1; i >= 0; i--)
+                {
+                    await context.FillTextAsync(results[i].ToString(), 0, lineHeight + (results.Count * lineHeight) - i * lineHeight);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await runtime.InvokeVoidAsync("console.log", ex.Message + (results != null));
+        }
+        finally
+        {
+            await context.RestoreAsync();
+            await context.RestoreAsync();
+        }
+    }
+
+    private async Task DrawDisplay()
+    {
+        var gdt = await runtime.InvokeAsync<IJSInProcessObjectReference>(
+            "createLinearGradient",
+            context,
+            DisplaySize.width * .4, DisplaySize.height / -1.5, DisplaySize.width * .6, DisplaySize.height * 1.25,
+            new[]
+            {
+                new object[] {0, "rgba(30, 30, 30, 1)"},
+                new object[] {1, "rgba(60, 60, 60, 1)"},
+                }
+            );
+        await context.SetFillStyleAsync(gdt);
+        await context.FillRectAsync(0, 0, DisplaySize.width, DisplaySize.height);
+
+        await context.SaveAsync();
+
+        await context.TranslateAsync(outerPadding, outerPadding);
+
+        //await DrawA();
+        //await DrawB();
+        //await DrawC();
+        //await DrawD();
+        //await DrawE();
+        //await DrawF();
+        //await DrawG();
+
+        //await context.TranslateAsync((digitPadding * 2) + DigitSize.width, 0);
+
+        for (var i = 0; i < Entry.Digits.Length; i++)
+        {
+            digitIndex = i;
+            var digit = Entry.Digits[i];
+            await DrawA(digit.Contains(connections.a));
+            await DrawB(digit.Contains(connections.b));
+            await DrawC(digit.Contains(connections.c));
+            await DrawD(digit.Contains(connections.d));
+            await DrawE(digit.Contains(connections.e));
+            await DrawF(digit.Contains(connections.f));
+            await DrawG(digit.Contains(connections.g));
+
+            await context.TranslateAsync(digitPadding + DigitSize.width, 0);
+        }
+
+        await context.RestoreAsync();
+    }
+
+    private string GetColor(int connection, bool @on)
+    {
+        return on
+            ? connection >= tryIndex
+                ? "rgba(" + (64 + (int)(191 * noise.GetNoise((float)timeStamp + digitIndex * 256, digitIndex * 256 + connection * 16))) + ", 0, 0, 1)"
+                : "rgba(255, 0, 0, 1)"
+            : offColor;
+    }
+
+    private async Task DrawG(bool on = true)
+    {
+        await context.SetFillStyleAsync(GetColor(6, on));
+        await context.BeginPathAsync();
+        await context.MoveToAsync(Spacing, DigitSize.height);
+        await context.LineToAsync(DigitSize.width - Spacing, DigitSize.height);
+        await context.LineToAsync(DigitSize.width - Size - Spacing, DigitSize.height - Size);
+        await context.LineToAsync(Size + Spacing, DigitSize.height - Size);
+        await context.LineToAsync(Spacing, DigitSize.height);
+        await context.ClosePathAsync();
+        await context.FillAsync();
+    }
+
+    private async Task DrawF(bool on = true)
+    {
+        await context.SetFillStyleAsync(GetColor(5, on));
+        await context.BeginPathAsync();
+        await context.MoveToAsync(DigitSize.width, MiddleY + Spacing);
+        await context.LineToAsync(DigitSize.width - Size, MiddleY + Spacing + Size);
+        await context.LineToAsync(DigitSize.width - Size, DigitSize.height - Spacing - Size);
+        await context.LineToAsync(DigitSize.width, DigitSize.height - Spacing);
+        await context.LineToAsync(DigitSize.width, MiddleY + Spacing);
+        await context.ClosePathAsync();
+        await context.FillAsync();
+    }
+
+    private async Task DrawE(bool on = true)
+    {
+        await context.SetFillStyleAsync(GetColor(4, on));
+        await context.BeginPathAsync();
+        await context.MoveToAsync(0, MiddleY + Spacing);
+        await context.LineToAsync(Size, MiddleY + Spacing + Size);
+        await context.LineToAsync(Size, DigitSize.height - Spacing - Size);
+        await context.LineToAsync(0, DigitSize.height - Spacing);
+        await context.LineToAsync(0, MiddleY + Spacing);
+        await context.ClosePathAsync();
+        await context.FillAsync();
+    }
+
+    private async Task DrawD(bool on = true)
+    {
+        await context.SetFillStyleAsync(GetColor(3, on));
+        await context.BeginPathAsync();
+        await context.MoveToAsync(Spacing, MiddleY);
+        await context.LineToAsync(Spacing + Size, MiddleY - (Size));
+        await context.LineToAsync(DigitSize.width - Size - Spacing, MiddleY - (Size));
+        await context.LineToAsync(DigitSize.width - Spacing, MiddleY);
+        await context.LineToAsync(DigitSize.width - Size - Spacing, MiddleY + (Size));
+        await context.LineToAsync(Spacing + Size, MiddleY + (Size));
+        await context.LineToAsync(Spacing, MiddleY);
+        await context.ClosePathAsync();
+        await context.FillAsync();
+    }
+
+    private async Task DrawC(bool on = true)
+    {
+        await context.SetFillStyleAsync(GetColor(2, on));
+        await context.BeginPathAsync();
+        await context.MoveToAsync(DigitSize.width, Spacing);
+        await context.LineToAsync(DigitSize.width - Size, Spacing + Size);
+        await context.LineToAsync(DigitSize.width - Size, MiddleY - Spacing - Size);
+        await context.LineToAsync(DigitSize.width, MiddleY - Spacing);
+        await context.LineToAsync(DigitSize.width, Spacing);
+        await context.ClosePathAsync();
+        await context.FillAsync();
+    }
+
+    private async Task DrawB(bool on = true)
+    {
+        await context.SetFillStyleAsync(GetColor(1, on));
+        await context.BeginPathAsync();
+        await context.MoveToAsync(0, Spacing);
+        await context.LineToAsync(Size, Spacing + Size);
+        await context.LineToAsync(Size, MiddleY - Spacing - Size);
+        await context.LineToAsync(0, MiddleY - Spacing);
+        await context.LineToAsync(0, Spacing);
+        await context.ClosePathAsync();
+        await context.FillAsync();
+    }
+
+    private async Task DrawA(bool on = true)
+    {
+        await context.SetFillStyleAsync(GetColor(0, on));
+        await context.BeginPathAsync();
+        await context.MoveToAsync(Spacing, 0);
+        await context.LineToAsync(DigitSize.width - Spacing, 0);
+        await context.LineToAsync(DigitSize.width - Size - Spacing, Size);
+        await context.LineToAsync(Size + Spacing, Size);
+        await context.LineToAsync(Spacing, 0);
+        await context.ClosePathAsync();
+        await context.FillAsync();
+    }
+
+    private async Task DrawBackground()
+    {
+        await context.SetFillStyleAsync("black");
+        await context.FillRectAsync(0, 0, dimensions.Width, dimensions.Height);
+    }
+
+
+}

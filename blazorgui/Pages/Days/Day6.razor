@@ -14,17 +14,11 @@
     private double lastTick;
     private int index = 0;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task DrawInitialCanvas()
     {
         Fish = Lantern_Fish.GetInitialFish("day6.sample.txt");
         NextFish = Lantern_Fish.Multiply(Fish);
 
-        await Task.CompletedTask;
-    }
-
-
-    protected override async Task DrawInitialCanvas()
-    {
         await commonShapes.DrawBackground();
     }
 
