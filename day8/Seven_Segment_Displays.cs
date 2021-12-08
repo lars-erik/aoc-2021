@@ -28,10 +28,10 @@ namespace day8
             Assert.AreEqual(expectedSimpleOccurrences, totalSimples);
         }
 
-        [TestCase("day8.simplesample.txt", 5353)]
-        [TestCase("day8.sample.txt", 61229)]
-        [TestCase("day8.input.txt", 1011823)]
-        public void Are_Wired_As_Bad_As_Led_Matrixes(string resource, int expectedTotal)
+        [TestCase("day8.simplesample.txt", 5353, true)]
+        [TestCase("day8.sample.txt", 61229, false)]
+        [TestCase("day8.input.txt", 1011823, false)]
+        public void Are_Wired_As_Bad_As_Led_Matrixes(string resource, int expectedTotal, bool draw)
         {
             var entries = ParseEntries(resource);
 
@@ -93,49 +93,59 @@ namespace day8
                 var result = digit1 * 1000 + digit2 * 100 + digit3 * 10 + digit4;
                 total += result;
 
-                Console.WriteLine($"{digit1}{digit2}{digit3}{digit4}");
-                Console.WriteLine();
+                Console.WriteLine($"{entry.Digits[0].PatternString} {entry.Digits[1].PatternString} {entry.Digits[2].PatternString} {entry.Digits[3].PatternString} = {result}");
 
-                Console.WriteLine($"0: {Join("", pattern0)}");
-                Console.WriteLine($"1: {Join("", pattern1)}");
-                Console.WriteLine($"2: {Join("", pattern2)}");
-                Console.WriteLine($"3: {Join("", pattern3)}");
-                Console.WriteLine($"4: {Join("", pattern4)}");
-                Console.WriteLine($"5: {Join("", pattern5)}");
-                Console.WriteLine($"6: {Join("", pattern6)}");
-                Console.WriteLine($"7: {Join("", pattern7)}");
-                Console.WriteLine($"8: {Join("", pattern8)}");
-                Console.WriteLine($"9: {Join("", pattern9)}");
-                Console.WriteLine();
-
-                Console.WriteLine($" {a}{a}{a}{a} ");
-                Console.WriteLine($"{b}    {c}");
-                Console.WriteLine($"{b}    {c}");
-                Console.WriteLine($" {d}{d}{d}{d} ");
-                Console.WriteLine($"{e}    {f}");
-                Console.WriteLine($"{e}    {f}");
-                Console.WriteLine($" {g}{g}{g}{g} ");
-                Console.WriteLine();
-
-                Console.WriteLine($"a: {a}");
-                Console.WriteLine($"b: {b}");
-                Console.WriteLine($"c: {c}");
-                Console.WriteLine($"d: {d}");
-                Console.WriteLine($"d: {e}");
-                Console.WriteLine($"f: {f}");
-                Console.WriteLine($"f: {g}");
+                if (draw)
+                { 
+                    Console.WriteLine();
+                    ListPatterns(pattern0, pattern1, pattern2, pattern3, pattern4, pattern5, pattern6, pattern7, pattern8, pattern9);
+                    DrawDigitConnections(a, b, c, d, e, f, g);
+                    ShowOrderedConnections(a, b, c, d, e, f, g);
+                }
             }
+
+            Console.WriteLine($"Total {total}");
 
             Assert.AreEqual(expectedTotal, total);
         }
 
-        static char Subtract(Entry entry, int digitA, int digitB)
+        private static void ShowOrderedConnections(char a, char b, char c, char d, char e, char f, char g)
         {
-            var patternA = entry.FindUniquePattern(digitA);
-            var patternB = entry.FindUniquePattern(digitB);
-            var segmentsInBoth = patternA.PatternString.Intersect(patternB.PatternString);
-            var result = patternA.Segments.Except(segmentsInBoth).Single();
-            return result;
+            Console.WriteLine($"a: {a}");
+            Console.WriteLine($"b: {b}");
+            Console.WriteLine($"c: {c}");
+            Console.WriteLine($"d: {d}");
+            Console.WriteLine($"d: {e}");
+            Console.WriteLine($"f: {f}");
+            Console.WriteLine($"f: {g}");
+        }
+
+        private static void DrawDigitConnections(char a, char b, char c, char d, char e, char f, char g)
+        {
+            Console.WriteLine($" {a}{a}{a}{a} ");
+            Console.WriteLine($"{b}    {c}");
+            Console.WriteLine($"{b}    {c}");
+            Console.WriteLine($" {d}{d}{d}{d} ");
+            Console.WriteLine($"{e}    {f}");
+            Console.WriteLine($"{e}    {f}");
+            Console.WriteLine($" {g}{g}{g}{g} ");
+            Console.WriteLine();
+        }
+
+        private static void ListPatterns(char[] pattern0, char[] pattern1, char[] pattern2, char[] pattern3, char[] pattern4,
+            char[] pattern5, char[] pattern6, char[] pattern7, char[] pattern8, char[] pattern9)
+        {
+            Console.WriteLine($"0: {Join("", pattern0)}");
+            Console.WriteLine($"1: {Join("", pattern1)}");
+            Console.WriteLine($"2: {Join("", pattern2)}");
+            Console.WriteLine($"3: {Join("", pattern3)}");
+            Console.WriteLine($"4: {Join("", pattern4)}");
+            Console.WriteLine($"5: {Join("", pattern5)}");
+            Console.WriteLine($"6: {Join("", pattern6)}");
+            Console.WriteLine($"7: {Join("", pattern7)}");
+            Console.WriteLine($"8: {Join("", pattern8)}");
+            Console.WriteLine($"9: {Join("", pattern9)}");
+            Console.WriteLine();
         }
 
         private static IEnumerable<Entry> ParseEntries(string resource)
