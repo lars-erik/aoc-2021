@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,9 +15,9 @@ namespace day8
         [TestCase("day8.simplesample.txt", 0)]
         [TestCase("day8.sample.txt", 26)]
         [TestCase("day8.input.txt", 476)]
-        public void Have_Four_Unique_Segments(string resource, int expectedSimpleOccurrences)
+        public void Have_Four_Unique_Patterns(string resource, int expectedSimpleOccurrences)
         {
-            var entries = ParseEntries(resource);
+            var entries = Entry.ParseEntries(resource);
 
             var totalSimples = 0;
             foreach (var entry in entries)
@@ -33,75 +34,25 @@ namespace day8
         [TestCase("day8.input.txt", 1011823, false)]
         public void Are_Wired_As_Bad_As_Led_Matrixes(string resource, int expectedTotal, bool draw)
         {
-            var entries = ParseEntries(resource);
+            var entries = Entry.ParseEntries(resource);
 
             long total = 0;
             foreach (var entry in entries)
             {
-                var patterns = entry.Patterns.Select(x => x.Segments).ToArray();
+                var display = entry.ConnectDisplay();
 
-                var pattern1 = patterns.Single(x => x.Length == 2);
-                var pattern7 = patterns.Single(x => x.Length == 3);
-                var pattern4 = patterns.Single(x => x.Length == 4);
-                var pattern8 = patterns.Single(x => x.Length == 7);
-                var fiveSegs = patterns.Where(x => x.Length == 5).ToArray();
-                var sixSegs = patterns.Where(x => x.Length == 6).ToArray();
-
-                var a = pattern7.Except(pattern1).Single();
-                var f = patterns.SelectMany(x => x).GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
-                var c = pattern7.Except(new[] {a, f}).Single();
-
-                var pattern3 = fiveSegs.Single(x => x.Intersect(pattern7).Count() == 3);
-
-                var d = pattern3.Intersect(pattern4).Except(new[] {c, f}).Single();
-
-                var pattern0 = sixSegs.Single(x => x.All(y => y != d));
-                
-                var sixNine = sixSegs.Where(x => !x.SequenceEqual(pattern0)).ToArray();
-
-                var pattern9 = sixNine.Single(x => x.Intersect(pattern7).Count() == 3);
-                var pattern6 = sixNine.Single(x => x != pattern9);
-
-                var b = pattern4.Except(pattern3).Single();
-
-                var twoFive = fiveSegs.Where(x => !x.SequenceEqual(pattern3)).ToArray();
-                var pattern5 = twoFive.Single(x => x.Contains(f));
-                var pattern2 = twoFive.Except(new[]{pattern5}).Single();
-
-                var e = pattern2.Except(pattern3).Single();
-                var g = new[] {'a', 'b', 'c', 'd', 'e', 'f', 'g'}.Except(new[] {a, b, c, d, e, f}).Single();
-
-                var values = new Dictionary<string, int>()
-                {
-                    {Join("", pattern0), 0},
-                    {Join("", pattern1), 1},
-                    {Join("", pattern2), 2},
-                    {Join("", pattern3), 3},
-                    {Join("", pattern4), 4},
-                    {Join("", pattern5), 5},
-                    {Join("", pattern6), 6},
-                    {Join("", pattern7), 7},
-                    {Join("", pattern8), 8},
-                    {Join("", pattern9), 9},
-                };
-
-                var digit1 = values[entry.Digits[0].Key];
-                var digit2 = values[entry.Digits[1].Key];
-                var digit3 = values[entry.Digits[2].Key];
-                var digit4 = values[entry.Digits[3].Key];
-
-                var result = digit1 * 1000 + digit2 * 100 + digit3 * 10 + digit4;
-                total += result;
-
-                Console.WriteLine($"{entry.Digits[0].PatternString} {entry.Digits[1].PatternString} {entry.Digits[2].PatternString} {entry.Digits[3].PatternString} = {result}");
+                total += display.Number;
 
                 if (draw)
-                { 
+                {
                     Console.WriteLine();
-                    ListPatterns(pattern0, pattern1, pattern2, pattern3, pattern4, pattern5, pattern6, pattern7, pattern8, pattern9);
-                    DrawDigitConnections(a, b, c, d, e, f, g);
-                    ShowOrderedConnections(a, b, c, d, e, f, g);
+                    display.ListPatterns();
+                    display.DrawDigitConnections();
+                    display.ShowOrderedConnections();
+                    Console.WriteLine();
                 }
+
+                Console.WriteLine(display);
             }
 
             Console.WriteLine($"Total {total}");
@@ -109,8 +60,44 @@ namespace day8
             Assert.AreEqual(expectedTotal, total);
         }
 
-        private static void ShowOrderedConnections(char a, char b, char c, char d, char e, char f, char g)
+        //[Test]
+        //public void Swaps_Segment_By_Segment_When_Visualized()
+        //{
+        //    Assert.Fail("Could be really hard to test");
+        //}
+    }
+
+    public record Display(
+        Pattern[] OrderedPatterns,
+        (char a, char b, char c, char d, char e, char f, char g) Connections,
+        Pattern[] Digits
+    )
+    {
+        readonly Dictionary<string, int> values = new()
         {
+            { OrderedPatterns[0].Key, 0 },
+            { OrderedPatterns[1].Key, 1 },
+            { OrderedPatterns[2].Key, 2 },
+            { OrderedPatterns[3].Key, 3 },
+            { OrderedPatterns[4].Key, 4 },
+            { OrderedPatterns[5].Key, 5 },
+            { OrderedPatterns[6].Key, 6 },
+            { OrderedPatterns[7].Key, 7 },
+            { OrderedPatterns[8].Key, 8 },
+            { OrderedPatterns[9].Key, 9 },
+        };
+
+        public int Digit1 => values[Digits[0].Key];
+        public int Digit2 => values[Digits[1].Key];
+        public int Digit3 => values[Digits[2].Key];
+        public int Digit4 => values[Digits[3].Key];
+        public int Number => Digit1 * 1000 + Digit2 * 100 + Digit3 * 10 + Digit4;
+
+        public override string ToString() => $"{Digits[0].PatternString} {Digits[1].PatternString} {Digits[2].PatternString} {Digits[3].PatternString} = {Number}";
+
+        public void ShowOrderedConnections()
+        {
+            var (a, b, c, d, e, f, g) = Connections;
             Console.WriteLine($"a: {a}");
             Console.WriteLine($"b: {b}");
             Console.WriteLine($"c: {c}");
@@ -120,8 +107,9 @@ namespace day8
             Console.WriteLine($"f: {g}");
         }
 
-        private static void DrawDigitConnections(char a, char b, char c, char d, char e, char f, char g)
+        public void DrawDigitConnections()
         {
+            var (a, b, c, d, e, f, g) = Connections;
             Console.WriteLine($" {a}{a}{a}{a} ");
             Console.WriteLine($"{b}    {c}");
             Console.WriteLine($"{b}    {c}");
@@ -132,23 +120,64 @@ namespace day8
             Console.WriteLine();
         }
 
-        private static void ListPatterns(char[] pattern0, char[] pattern1, char[] pattern2, char[] pattern3, char[] pattern4,
-            char[] pattern5, char[] pattern6, char[] pattern7, char[] pattern8, char[] pattern9)
+        public void ListPatterns()
         {
-            Console.WriteLine($"0: {Join("", pattern0)}");
-            Console.WriteLine($"1: {Join("", pattern1)}");
-            Console.WriteLine($"2: {Join("", pattern2)}");
-            Console.WriteLine($"3: {Join("", pattern3)}");
-            Console.WriteLine($"4: {Join("", pattern4)}");
-            Console.WriteLine($"5: {Join("", pattern5)}");
-            Console.WriteLine($"6: {Join("", pattern6)}");
-            Console.WriteLine($"7: {Join("", pattern7)}");
-            Console.WriteLine($"8: {Join("", pattern8)}");
-            Console.WriteLine($"9: {Join("", pattern9)}");
+            for (var i = 0; i < 10; i++)
+            {
+                Console.WriteLine($"{i}: {OrderedPatterns[i]}");
+            }
             Console.WriteLine();
         }
+    }
 
-        private static IEnumerable<Entry> ParseEntries(string resource)
+    public record Entry(Pattern[] Patterns, Pattern[] Digits)
+    {
+        public Pattern SingleByLength(int length) => Patterns.Single(x => x.Length == length);
+
+        public Pattern[] FindByLength(int length) => Patterns.Where(x => x.Length == length).ToArray();
+
+        public char MostCommonSegment() => Patterns.SelectMany(x => x.Segments).GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
+
+        public Display ConnectDisplay()
+        {
+            var sorted = new Pattern[10];
+
+            sorted[1] = SingleByLength(2);
+            sorted[7] = SingleByLength(3);
+            sorted[4] = SingleByLength(4);
+            sorted[8] = SingleByLength(7);
+            var fiveSegs = FindByLength(5);
+            var sixSegs = FindByLength(6);
+
+            var a = sorted[7].SubtractUnique(sorted[1]);
+            var f = MostCommonSegment();
+            var c = sorted[7].SubtractUnique(a, f);
+
+            sorted[3] = sorted[7].MostSimilar(fiveSegs);
+
+            var d = (sorted[3] + sorted[4]).SubtractUnique(c, f);
+
+            sorted[0] = sixSegs.Single(x => x.DoesNotHave(d));
+
+            var sixNine = sixSegs.Except(sorted[0]).ToArray();
+
+            sorted[9] = sorted[7].MostSimilar(sixNine);
+            sorted[6] = sixNine.Except(sorted[9]).Single();
+
+            var b = sorted[4].SubtractUnique(sorted[3]);
+
+            var twoFive = fiveSegs.Except(sorted[3]).ToArray();
+            sorted[5] = twoFive.Single(x => x.Contains(f));
+            sorted[2] = twoFive.Except(sorted[5]).Single();
+
+            var e = sorted[2].SubtractUnique(sorted[3]);
+            var g = new[] {'a', 'b', 'c', 'd', 'e', 'f', 'g'}.SubtractUnique(a, b, c, d, e, f);
+
+            var display = new Display(sorted, (a, b, c, d, e, f, g), Digits);
+            return display;
+        }
+
+        public static IEnumerable<Entry> ParseEntries(string resource)
         {
             var lines = Resources.GetResourceLines(typeof(Seven_Segment_Displays), resource);
             var entries = lines.Select(line =>
@@ -160,33 +189,52 @@ namespace day8
             });
             return entries;
         }
+    }
 
-        record Entry(Pattern[] Patterns, Pattern[] Digits)
+    public record Pattern(string PatternString) : IEnumerable<char>
+    {
+        public readonly char[] Segments = PatternString.OrderBy(x => x).ToArray();
+        public readonly string Key = Join("", PatternString.OrderBy(x => x)); // CreateKey(PatternString);
+
+        public readonly int[] InitialCandidates = PatternString.Length switch
         {
+            2 => new[] { 1 },
+            3 => new[] { 7 },
+            4 => new[] { 4 },
+            5 => new[] { 2, 3, 5 },
+            6 => new[] { 0, 6, 9 },
+            7 => new[] { 8 },
+            _ => throw new Exception("Incompatible segment string")
+        };
 
-            public Pattern FindUniquePattern(int digit)
-            {
-                return Patterns.Single(x => x.InitialCandidates.All(y => y == digit));
-            }
+        public bool IsUnique => InitialCandidates.Length == 1;
+
+        public int Length => Segments.Length;
+
+        public int CommonSegmentCount(Pattern other) => this.Intersect(other).Count();
+
+        public Pattern MostSimilar(Pattern[] segments) => segments.Select(x => (x, count: x.CommonSegmentCount(this))).OrderByDescending(x => x.count).First().x;
+
+        public bool DoesNotHave(char d)
+        {
+            return Segments.All(y => y != d);
         }
 
-        record Pattern(string PatternString)
-        {
-            public readonly char[] Segments = PatternString.OrderBy(x => x).ToArray();
-            public readonly string Key = Join("", PatternString.OrderBy(x => x)); // CreateKey(PatternString);
+        public static implicit operator char[](Pattern pattern) => pattern.Segments;
+        
+        public static IEnumerable<char> operator +(Pattern x, Pattern y) => x.Intersect(y);
 
-            public readonly int[] InitialCandidates = PatternString.Length switch
-            {
-                2 => new[] {1},
-                3 => new[] {7},
-                4 => new[] {4},
-                5 => new[] {2, 3, 5},
-                6 => new[] {0, 6, 9},
-                7 => new[] {8},
-                _ => throw new Exception("Incompatible segment string")
-            };
+        public override string ToString() => PatternString;
 
-            public bool IsUnique => InitialCandidates.Length == 1;
-        }
+        public IEnumerator<char> GetEnumerator() => Segments.AsEnumerable().GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    public static class PatternExtension
+    {
+        public static char SubtractUnique(this IEnumerable<char> segments, params char[] other) => segments.Except(other).Single();
+
+        public static IEnumerable<Pattern> Except(this IEnumerable<Pattern> patterns, Pattern other) => patterns.Except(new[] { other });
     }
 }
