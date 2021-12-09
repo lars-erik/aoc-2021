@@ -53,6 +53,7 @@ namespace day9
             basinMatrix = new int[areaLength][];
             for (var i = 0; i < areaLength; i++) basinMatrix[i] = new int[areaWidth];
             bedPoints = new Dictionary<int, (int x, int y)>();
+            IterateMatrix(FindBasinBeds);
         }
 
         [Test]
@@ -61,8 +62,6 @@ namespace day9
         [UseReporter(typeof(ShellLauncherReporter))]
         public void Calculates_Risk_Score_For_Low_Points(string resource, int expectedRisk)
         {
-            IterateMatrix(FindBasinBeds);
-
             var totalRisk = 0;
             IterateMatrix(p =>
             {
@@ -89,8 +88,6 @@ namespace day9
         [UseReporter(typeof(ShellLauncherReporter))]
         public void Finds_The_Three_Largest_Basins_To_Avoid(string resource, int expectedSize)
         {
-            IterateMatrix(FindBasinBeds);
-
             Dictionary<int, int> basinSizes = new Dictionary<int, int>();
 
             var currentBasinId = 1;
