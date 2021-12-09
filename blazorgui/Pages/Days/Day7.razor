@@ -14,21 +14,21 @@
 
     Dictionary<char, string> colors = new()
     {
-            { 'a', "rgba(240, 22, 16, 1)" },
-            { 'b', "rgba(247, 62, 20, 1)" },
-            { 'c', "rgba(224, 94, 29, 1)" },
-            { 'd', "rgba(247, 130, 20, 1)" },
-            { 'e', "rgba(237, 154, 19, 1)" },
-            { 'f', "rgba(247, 180, 22, 1)" },
-            { 'g', "rgba(255, 210, 20, 1)" },
-        };
+        { 'a', "rgba(240, 22, 16, 1)" },
+        { 'b', "rgba(247, 62, 20, 1)" },
+        { 'c', "rgba(224, 94, 29, 1)" },
+        { 'd', "rgba(247, 130, 20, 1)" },
+        { 'e', "rgba(237, 154, 19, 1)" },
+        { 'f', "rgba(247, 180, 22, 1)" },
+        { 'g', "rgba(255, 210, 20, 1)" },
+    };
 
     string offColor = "rgba(20, 20, 20, 1)";
 
-    private static readonly (int width, int height) DigitSize = (width: 80, height: 160);
+    private static readonly (int width, int height) DigitSize = (width: 30, height: 60);
     private const int digits = 4;
-    private const int outerPadding = 20;
-    private const int digitPadding = 20;
+    private const int outerPadding = 10;
+    private const int digitPadding = 10;
     private (int width, int height) DisplaySize = (
         width: outerPadding * 2
                + (digits - 1) * digitPadding
@@ -41,7 +41,11 @@
     private double Size;
     private int MiddleY;
 
-    double prevTick = 0;
+    double prevTick = 2000;
+    double prevIndexTick = 2000;
+    int perTick = 200;
+    int hold = 500;
+
     int index = 0;
     int tryIndex = 0;
     int digitIndex = 0;
@@ -87,8 +91,6 @@
     [JSInvokable]
     public override async ValueTask Update(double timeStamp)
     {
-        var perTick = 200;
-        var hold = 500;
         this.timeStamp = timeStamp;
         if ((timeStamp - perTick) > prevTick)
         {
@@ -114,6 +116,7 @@
             {
                 results.Add(Connector.Display);
                 tryIndex++;
+                prevIndexTick = timeStamp;
                 connections = Enumerator.Current;
                 await DrawScene();
                 prevTick += hold;
@@ -140,6 +143,7 @@
 
     private async Task DrawScene()
     {
+
         await context.SaveAsync();
 
         await DrawBackground();
@@ -159,11 +163,21 @@
             await context.SetFillStyleAsync("white");
             if (results.Any())
             {
-                await context.FillTextAsync("Total: " + results.Select(x => x.Number).Sum().ToString("n0"), 0, 0);
+                var delta = Math.Min((timeStamp - prevIndexTick) / hold, 1);
+                var total = "Total: " + results.Select(x => x.Number).Sum().ToString("n0");
+                var totLength = (int) Math.Ceiling(total.Length * delta);
+                await context.FillTextAsync(total.Substring(0, totLength), 0, 0);
                 var lineHeight = 28;
                 for (var i = results.Count - 1; i >= 0; i--)
                 {
-                    await context.FillTextAsync(results[i].ToString(), 0, lineHeight + (results.Count * lineHeight) - i * lineHeight);
+                    var text = results[i].ToString();
+                    if (i == results.Count - 1)
+                    {
+                        delta = Math.Max(Math.Min((timeStamp - prevIndexTick - hold) / (perTick * 2 + hold), 1), 0);
+                        var length = (int) Math.Ceiling(text.Length * delta);
+                        text = text.Substring(0, length);
+                    }
+                    await context.FillTextAsync(text, 0, lineHeight + (results.Count * lineHeight) - i * lineHeight);
                 }
             }
         }
