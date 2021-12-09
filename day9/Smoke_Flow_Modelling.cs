@@ -199,6 +199,9 @@ namespace day9
                 }
             });
 
+            img.Mutate(x => x.BokehBlur(24, 2, 1));
+            img.Mutate(x => x.GaussianSharpen(4));
+
             var coll = new FontCollection();
             var family = coll.Install(@"c:\windows\fonts\OCRAEXT.TTF");
             var font = family.CreateFont(15, FontStyle.Regular);
