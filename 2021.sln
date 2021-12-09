@@ -19,9 +19,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "blazorgui", "blazorgui\blaz
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day6", "day6\day6.csproj", "{2701823D-FFD7-4212-855A-62B167437780}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day7", "day7\day7.csproj", "{48B5E06B-489B-450F-BC58-1843A27CFD95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day7", "day7\day7.csproj", "{48B5E06B-489B-450F-BC58-1843A27CFD95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day8", "day8\day8.csproj", "{DBC22B6C-0EA7-41FE-8246-226A37651C1F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day8", "day8\day8.csproj", "{DBC22B6C-0EA7-41FE-8246-226A37651C1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day9", "day9\day9.csproj", "{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -153,6 +155,18 @@ Global
 		{DBC22B6C-0EA7-41FE-8246-226A37651C1F}.Release|x64.Build.0 = Release|Any CPU
 		{DBC22B6C-0EA7-41FE-8246-226A37651C1F}.Release|x86.ActiveCfg = Release|Any CPU
 		{DBC22B6C-0EA7-41FE-8246-226A37651C1F}.Release|x86.Build.0 = Release|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Debug|x64.Build.0 = Debug|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Debug|x86.Build.0 = Debug|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Release|x64.ActiveCfg = Release|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Release|x64.Build.0 = Release|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Release|x86.ActiveCfg = Release|Any CPU
+		{B02EAC22-DD0D-48A3-A435-CEFD1BAEEB5A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
