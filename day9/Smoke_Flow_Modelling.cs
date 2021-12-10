@@ -84,7 +84,7 @@ namespace day9
 
         [Test]
         [TestCase("day9.sample.txt", 1134)]
-        [TestCase("day9.input.txt", 899392)]
+        [TestCase("day9.input.txt", 899392, Category = "Slow")]
         [UseReporter(typeof(ShellLauncherReporter))]
         public void Finds_The_Three_Largest_Basins_To_Avoid(string resource, int expectedSize)
         {
