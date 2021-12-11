@@ -8,31 +8,13 @@ namespace day11
     [TestFixture]
     public class Dumbo_Octopuses
     {
-        private int[,] matrix;
-        private int height;
-        private int width;
-        private int[,] newMatrix;
-        private bool[,] flashes;
-        private int currentFlashCount;
-        private int flashCount;
+        private DumboOctopuses octos;
 
         [SetUp]
         public void Setup()
         {
             var lines = Resources.GetResourceLines(typeof(Dumbo_Octopuses), TestContext.CurrentContext.Test.Arguments[0]!.ToString());
-            height = lines.Length;
-            width = lines[0].Length;
-            matrix = new int[height, width];
-            for (var y = 0; y < height; y++)
-            {
-                for (var x = 0; x < width; x++)
-                {
-                    matrix[y, x] = Convert.ToInt32(new String(lines[y][x], 1));
-                }
-            }
-
-            currentFlashCount = 0;
-            flashCount = 0;
+            octos = DumboOctopuses.Create(lines);
         }
 
         [Test]
@@ -43,20 +25,20 @@ namespace day11
             var steps = 100;
 
             Console.WriteLine("Before any steps:");
-            DumpMatrix(matrix);
+            DumpMatrix(octos.Matrix);
 
             for (var step = 0; step < steps; step++)
             {
-                PassTime();
+                octos.PassTime();
 
                 if (step < 10 || (step % 10) == 9)
                 { 
-                    Console.WriteLine($"After step {step + 1} with {flashCount}:");
-                    DumpMatrix(matrix);
+                    Console.WriteLine($"After step {step + 1} with {octos.FlashCount}:");
+                    DumpMatrix(octos.Matrix);
                 }
             }
 
-            Assert.AreEqual(expectedFlashes, flashCount);
+            Assert.AreEqual(expectedFlashes, octos.FlashCount);
         }
 
         [Test]
@@ -65,29 +47,66 @@ namespace day11
         public void Flashes_Simultaneously_At_Given_Intervals(string resource, int expectedStep)
         {
             Console.WriteLine("Before any steps:");
-            DumpMatrix(matrix);
+            DumpMatrix(octos.Matrix);
 
-            flashCount = 0;
             int step;
-            for (step = 0; currentFlashCount < 100; step++)
+            for (step = 0; octos.CurrentFlashCount < 100; step++)
             {
-                PassTime();
+                octos.PassTime();
 
                 if (step < 10 || (step % 10) == 9)
                 { 
-                    Console.WriteLine($"After step {step + 1} with {flashCount}:");
-                    DumpMatrix(matrix);
+                    Console.WriteLine($"After step {step + 1} with {octos.FlashCount}:");
+                    DumpMatrix(octos.Matrix);
                 }
             }
 
             Assert.AreEqual(expectedStep, step);
         }
 
-        private void PassTime()
+
+        private void DumpMatrix(int[,] matrixToDump)
         {
-            currentFlashCount = 0;
-            newMatrix = new int[height, width];
-            flashes = new bool[height, width];
+            octos.IterateMatrix((y, x) =>
+            {
+                Console.Write($"{matrixToDump[y, x]}");
+                if (x == octos.Width - 1) Console.WriteLine();
+            });
+            Console.WriteLine();
+        }
+    }
+
+    public class DumboOctopuses
+    {
+        private int[,] matrix;
+        private int[,] newMatrix;
+        private bool[,] flashes;
+
+        public int Height { get; }
+
+        public int Width { get; }
+
+        public int CurrentFlashCount { get; private set; }
+
+        public int FlashCount { get; private set; }
+
+        public int[,] Matrix => matrix;
+
+        public int[,] NewMatrix => newMatrix;
+
+        public DumboOctopuses(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            CurrentFlashCount = 0;
+            FlashCount = 0;
+        }
+
+        public void PassTime()
+        {
+            CurrentFlashCount = 0;
+            newMatrix = new int[Height, Width];
+            flashes = new bool[Height, Width];
             IterateMatrix((y, x) => newMatrix[y, x] = matrix[y, x] + 1);
 
             IterateMatrix(IncreaseNeighbours);
@@ -97,7 +116,7 @@ namespace day11
             {
                 if (matrix[y, x] > 9) matrix[y, x] = 0;
             });
-            flashCount += currentFlashCount;
+            FlashCount += CurrentFlashCount;
         }
 
         private void IncreaseNeighbours(int y, int x)
@@ -105,7 +124,7 @@ namespace day11
             if (newMatrix[y, x] > 9 && !flashes[y, x])
             {
                 flashes[y, x] = true;
-                currentFlashCount++;
+                CurrentFlashCount++;
                 IterateNeighbours(y, x, (y2, x2) =>
                 {
                     if (newMatrix[y2, x2] <= 9)
@@ -117,22 +136,11 @@ namespace day11
             }
         }
 
-
-        private void DumpMatrix(int[,] matrixToDump)
+        public void IterateMatrix(Action<int, int> action)
         {
-            IterateMatrix((y, x) =>
+            for (var y = 0; y < Height; y++)
             {
-                Console.Write($"{matrixToDump[y, x]}");
-                if (x == width - 1) Console.WriteLine();
-            });
-            Console.WriteLine();
-        }
-
-        private void IterateMatrix(Action<int, int> action)
-        {
-            for (var y = 0; y < height; y++)
-            {
-                for (var x = 0; x < width; x++)
+                for (var x = 0; x < Width; x++)
                 {
                     action(y, x);
                 }
@@ -142,9 +150,9 @@ namespace day11
 
         private void IterateNeighbours(int y, int x, Action<int, int> action)
         {
-            for (var y2 = Math.Max(y - 1, 0); y2 <= Math.Min(y + 1, height - 1); y2++)
+            for (var y2 = Math.Max(y - 1, 0); y2 <= Math.Min(y + 1, Height - 1); y2++)
             {
-                for (var x2 = Math.Max(x - 1, 0); x2 <= Math.Min(x + 1, width - 1); x2++)
+                for (var x2 = Math.Max(x - 1, 0); x2 <= Math.Min(x + 1, Width - 1); x2++)
                 {
                     if (!(y2 == y && x2 == x))
                     { 
@@ -152,7 +160,21 @@ namespace day11
                     }
                 }
             }
+        }
 
+        public static DumboOctopuses Create(string[] lines)
+        {
+            var octos = new DumboOctopuses(lines.Length, lines[0].Length);
+            octos.matrix = new int[octos.Height, octos.Width];
+            for (var y = 0; y < octos.Height; y++)
+            {
+                for (var x = 0; x < octos.Width; x++)
+                {
+                    octos.matrix[y, x] = Convert.ToInt32(new String(lines[y][x], 1));
+                }
+            }
+
+            return octos;
         }
     }
 }
