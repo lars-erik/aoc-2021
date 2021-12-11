@@ -9,7 +9,7 @@ namespace common
         public static string[] GetResourceLines(Type type, string name)
         {
             var input = new StreamReader(type.Assembly.GetManifestResourceStream(name)).ReadToEnd();
-            string[] lines = input.Split(Environment.NewLine);
+            string[] lines = input.Split(Environment.NewLine).Select(x => x.Trim()).ToArray();
             return lines;
         }
 

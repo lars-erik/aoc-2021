@@ -13,8 +13,18 @@ namespace day11
         [SetUp]
         public void Setup()
         {
-            var lines = Resources.GetResourceLines(typeof(Dumbo_Octopuses), TestContext.CurrentContext.Test.Arguments[0]!.ToString());
-            octos = DumboOctopuses.Create(lines);
+            octos = CreateOctos(TestContext.CurrentContext.Test.Arguments[0]!.ToString());
+        }
+
+        public static DumboOctopuses CreateOctos(string resourceName)
+        {
+            var lines = CreateLines(resourceName);
+            return DumboOctopuses.Create(lines);
+        }
+
+        public static string[] CreateLines(string resourceName)
+        {
+            return Resources.GetResourceLines(typeof(Dumbo_Octopuses), resourceName);
         }
 
         [Test]
