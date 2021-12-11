@@ -47,19 +47,7 @@ namespace day11
 
             for (var step = 0; step < steps; step++)
             {
-                currentFlashCount = 0;
-                newMatrix = new int[height, width];
-                flashes = new bool[height, width];
-                IterateMatrix((y, x) => newMatrix[y, x] = matrix[y, x] + 1);
-
-                IterateMatrix(IncreaseNeighbours);
-
-                matrix = newMatrix;
-                IterateMatrix((y, x) =>
-                {
-                    if (matrix[y, x] > 9) matrix[y, x] = 0;
-                });
-                flashCount += currentFlashCount;
+                PassTime();
 
                 if (step < 10 || (step % 10) == 9)
                 { 
@@ -83,19 +71,7 @@ namespace day11
             int step;
             for (step = 0; currentFlashCount < 100; step++)
             {
-                currentFlashCount = 0;
-                newMatrix = new int[height, width];
-                flashes = new bool[height, width];
-                IterateMatrix((y, x) => newMatrix[y, x] = matrix[y, x] + 1);
-
-                IterateMatrix(IncreaseNeighbours);
-
-                matrix = newMatrix;
-                IterateMatrix((y, x) =>
-                {
-                    if (matrix[y, x] > 9) matrix[y, x] = 0;
-                });
-                flashCount += currentFlashCount;
+                PassTime();
 
                 if (step < 10 || (step % 10) == 9)
                 { 
@@ -105,6 +81,23 @@ namespace day11
             }
 
             Assert.AreEqual(expectedStep, step);
+        }
+
+        private void PassTime()
+        {
+            currentFlashCount = 0;
+            newMatrix = new int[height, width];
+            flashes = new bool[height, width];
+            IterateMatrix((y, x) => newMatrix[y, x] = matrix[y, x] + 1);
+
+            IterateMatrix(IncreaseNeighbours);
+
+            matrix = newMatrix;
+            IterateMatrix((y, x) =>
+            {
+                if (matrix[y, x] > 9) matrix[y, x] = 0;
+            });
+            flashCount += currentFlashCount;
         }
 
         private void IncreaseNeighbours(int y, int x)
