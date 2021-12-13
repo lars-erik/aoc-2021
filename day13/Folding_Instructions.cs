@@ -70,9 +70,12 @@ namespace day13
                         }
                     }
                     newPoints.Add(newPoint);
+
                 }
 
                 points = newPoints;
+                maxX = points.Max(x => x.X);
+                maxY = points.Max(x => x.Y);
             }
 
             maxX = points.Max(x => x.X);
@@ -97,6 +100,78 @@ namespace day13
             }
 
             Assert.AreEqual(expectedAfterFirst, dots);
+        }
+
+        [Test]
+        [TestCase("day13.sample.txt")]
+        [TestCase("day13.input.txt")]
+        public void Yields_New_Full_Picture(string resource)
+        {
+            //Console.WriteLine(JsonConvert.SerializeObject(points));
+            //Console.WriteLine(JsonConvert.SerializeObject(instructions));
+
+            Console.WriteLine($"{maxX}, {maxY}");
+
+            List<Point> newPoints = null;
+            for (var i = 0; i < instructions.Count; i++)
+            {
+                var instr = instructions[i];
+                Console.WriteLine(instr.axis + "=" + instr.coord);
+                newPoints = new List<Point>();
+                foreach (var p in points)
+                {
+                    Point newPoint = p;
+                    if (instr.axis == "y")
+                    {
+                        if (p.Y > instr.coord)
+                        {
+                            newPoint = new Point(p.X, instr.coord - (p.Y - instr.coord));
+                        }
+                    }
+                    else // axis x
+                    {
+                        if (p.X > instr.coord)
+                        { 
+                            newPoint = new Point(instr.coord - (p.X - instr.coord), p.Y);
+                        }
+                    }
+                    newPoints.Add(newPoint);
+                }
+
+                points = newPoints;
+                if (instr.axis == "y")
+                {
+                    maxY = instr.coord;
+                }
+                else
+                { 
+                    maxX = instr.coord;
+                }
+                Console.WriteLine($"{maxX}, {maxY}");
+
+            }
+
+            Console.WriteLine();
+
+            int dots = 0;
+
+            for (var y = 0; y <= maxY; y++)
+            {
+                for (var x = 0; x <= maxX; x++)
+                {
+                    if (newPoints.Contains(new(x, y)))
+                    {
+                        Console.Write("#");
+                        dots++;
+                    }
+                    else
+                    {
+                        Console.Write(".");
+                    }
+                }
+                Console.WriteLine();
+            }
+
         }
 
         record Point(int X, int Y)
