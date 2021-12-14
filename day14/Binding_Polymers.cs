@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using common;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -26,21 +27,22 @@ namespace day14
         }
 
         [Test]
-        [TestCase("day14.sample.txt", true, 1588)]
-        [TestCase("day14.input.txt", false, 3831)]
-        public void Puts_Elements_Between_Letters(string resource, bool print, int expected)
+        [TestCase("day14.sample.txt", true, 1588, 10)]
+        [TestCase("day14.input.txt", false, 3831, 10)]
+        public void Puts_Elements_Between_Letters(string resource, bool print, int expected, int maxSteps)
         {
-            for(var step = 0; step < 10; step++)
+            for(var step = 0; step < maxSteps; step++)
             { 
-                var nextInput = input.Substring(0, 1);
+                var nextInput = new StringBuilder(input.Length * 2);
+                nextInput.Append(input.Substring(0, 1));
                 for (var i = 0; i < input.Length - 1; i++)
                 {
                     var pair = input.Substring(i, 2);
                     var inBetween = pairs[pair];
-                    nextInput += inBetween + pair[1];
+                    nextInput.Append(inBetween + pair[1]);
                 }
 
-                input = nextInput;
+                input = nextInput.ToString();
                 
                 if(print)
                 { 
@@ -59,6 +61,79 @@ namespace day14
             var result = mostOccurring.count - leastOccurring.count;
 
             Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        [TestCase("day14.sample.txt", true, 2188189693529, 40)]
+        [TestCase("day14.input.txt", true, 5725739914282, 40)]
+        //[TestCase("day14.input.txt", false, 3831, 10)]
+        public void Manages_Huge_Polymers(string resource, bool print, long expected, int maxSteps)
+        {
+            var pairOccs = new Dictionary<string, long>();
+            var charOccs = new Dictionary<char, long>();
+            for (var i = 0; i < input.Length - 1; i++)
+            {
+                var pair = input.Substring(i, 2);
+                if (pairOccs.ContainsKey(pair))
+                    pairOccs[pair]++;
+                else
+                    pairOccs.Add(pair, 1);
+
+                var a = pair[0];
+                var b = pair[1];
+                if (!charOccs.ContainsKey(a)) charOccs.Add(a, 0);
+                if (!charOccs.ContainsKey(b)) charOccs.Add(b, 0);
+
+                charOccs[a] += pairOccs[pair];
+                charOccs[b] += pairOccs[pair];
+            }
+
+            pairOccs.Dump();
+            charOccs.Dump();
+
+            for (var step = 0; step < maxSteps; step++)
+            {
+                var newPairOccs = new Dictionary<string, long>();
+
+                foreach (var key in pairOccs.Keys)
+                {
+                    var insert = pairs[key];
+                    var newLeft = key[0] + insert;
+                    var newRight = insert + key[1];
+
+                    if (newPairOccs.ContainsKey(newLeft))
+                        newPairOccs[newLeft] += pairOccs[key];
+                    else
+                        newPairOccs.Add(newLeft, pairOccs[key]);
+
+                    if (newPairOccs.ContainsKey(newRight))
+                        newPairOccs[newRight] += pairOccs[key];
+                    else
+                        newPairOccs.Add(newRight, pairOccs[key]);
+                }
+
+                pairOccs = newPairOccs;
+                newPairOccs.Dump();
+            }
+
+            charOccs = new Dictionary<char, long>
+            {
+                { input[0], 1 }
+            };
+            foreach (var key in pairOccs.Keys)
+            {
+                var b = key[1];
+                if (!charOccs.ContainsKey(b)) charOccs.Add(b, 0);
+                charOccs[b] += pairOccs[key];
+            }
+
+            var max = charOccs.Values.Max();
+            var min = charOccs.Values.Min();
+
+            charOccs.Dump();
+
+            Assert.AreEqual(expected, max - min);
+
         }
     }
 }
