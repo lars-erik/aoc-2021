@@ -70,26 +70,14 @@ namespace day14
         public void Manages_Huge_Polymers(string resource, bool print, long expected, int maxSteps)
         {
             var pairOccs = new Dictionary<string, long>();
-            var charOccs = new Dictionary<char, long>();
             for (var i = 0; i < input.Length - 1; i++)
             {
                 var pair = input.Substring(i, 2);
-                if (pairOccs.ContainsKey(pair))
-                    pairOccs[pair]++;
-                else
-                    pairOccs.Add(pair, 1);
-
-                var a = pair[0];
-                var b = pair[1];
-                if (!charOccs.ContainsKey(a)) charOccs.Add(a, 0);
-                if (!charOccs.ContainsKey(b)) charOccs.Add(b, 0);
-
-                charOccs[a] += pairOccs[pair];
-                charOccs[b] += pairOccs[pair];
+                if (!pairOccs.ContainsKey(pair)) pairOccs.Add(pair, 0);
+                pairOccs[pair]++;
             }
 
             pairOccs.Dump();
-            charOccs.Dump();
 
             for (var step = 0; step < maxSteps; step++)
             {
@@ -101,22 +89,18 @@ namespace day14
                     var newLeft = key[0] + insert;
                     var newRight = insert + key[1];
 
-                    if (newPairOccs.ContainsKey(newLeft))
-                        newPairOccs[newLeft] += pairOccs[key];
-                    else
-                        newPairOccs.Add(newLeft, pairOccs[key]);
+                    if (!newPairOccs.ContainsKey(newLeft)) newPairOccs.Add(newLeft, 0);
+                    if (!newPairOccs.ContainsKey(newRight)) newPairOccs.Add(newRight, 0);
 
-                    if (newPairOccs.ContainsKey(newRight))
-                        newPairOccs[newRight] += pairOccs[key];
-                    else
-                        newPairOccs.Add(newRight, pairOccs[key]);
+                    newPairOccs[newLeft] += pairOccs[key];
+                    newPairOccs[newRight] += pairOccs[key];
                 }
 
                 pairOccs = newPairOccs;
                 newPairOccs.Dump();
             }
 
-            charOccs = new Dictionary<char, long>
+            var charOccs = new Dictionary<char, long>
             {
                 { input[0], 1 }
             };
