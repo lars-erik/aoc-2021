@@ -7,10 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="input.txt" />
     <None Remove="sample.txt" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="input.txt" />
     <EmbeddedResource Include="sample.txt" />
   </ItemGroup>
 
