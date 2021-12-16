@@ -62,7 +62,7 @@ namespace day15
             gScore[0, 0] = 0;
             fScore[0, 0] = 0;
 
-            var bestPath = FindBestPaths(expectedTotalRisk);
+            var bestPath = FindBestPaths();
 
             Console.WriteLine(bestPath.Total);
             Console.WriteLine(String.Join(" > ", bestPath.Points.Select(x => x.ToString())));
@@ -71,13 +71,55 @@ namespace day15
             Assert.AreEqual(expectedTotalRisk, bestPath.Total);
         }
 
-        private Path FindBestPaths(int maxRisk)
+        [Test]
+        [TestCase("day15.sample.txt", 315)]
+        [TestCase("day15.input.txt", 2778)]
+        public void Finds_The_Least_Risky_Path_In_Full_Map(string resource, int expectedTotalRisk)
         {
-            Point current;
 
+            var newMatrix = new int[(maxY + 1) * 5, (maxX + 1) * 5];
+            for (var ty = 0; ty < 5; ty++)
+            {
+                for (var tx = 0; tx < 5; tx++)
+                {
+                    Iterate((x, y) =>
+                    {
+                        var copyToX = x + tx * (maxX + 1);
+                        var copyToY = y + ty * (maxY + 1);
+                        newMatrix[copyToY, copyToX] = (matrix[y, x] + ty + tx);
+                        if (newMatrix[copyToY, copyToX] > 9)
+                            newMatrix[copyToY, copyToX] -= 9;
+                    });
+                }
+            }
+
+            matrix = newMatrix;
+
+            maxY = matrix.GetUpperBound(0);
+            maxX = matrix.GetUpperBound(1);
+            cameFrom = new Point[maxY + 1, maxX + 1];
+            gScore = new int[maxY + 1, maxX + 1];
+            fScore = new int[maxY + 1, maxX + 1];
+
+            Iterate((x, y) => gScore[y, x] = fScore[y, x] = Int16.MaxValue);
+
+            openSet.Add(new(0, 0, matrix[0, 0]));
+            gScore[0, 0] = 0;
+            fScore[0, 0] = 0;
+
+            var bestPath = FindBestPaths();
+
+            Console.WriteLine(bestPath.Total);
+            //Console.WriteLine(String.Join(" > ", bestPath.Points.Select(x => x.ToString())));
+
+            Assert.AreEqual(expectedTotalRisk, bestPath.Total);
+        }
+
+        private Path FindBestPaths()
+        {
             while(openSet.Any())
             {
-                current = openSet.OrderBy(p => fScore[p.Y, p.X]).First();
+                var current = openSet.OrderBy(p => fScore[p.Y, p.X]).First();
                 var isGoal = current.X == maxX && current.Y == maxY;
 
                 if (isGoal)
@@ -100,7 +142,7 @@ namespace day15
                 {
                     Point candidate = theseNeighbours[i];
 
-                    var tentativeScore = gScore[current.Y, current.X] + candidate.Risk;
+                    var tentativeScore = gScore[current.Y, current.X] + matrix[candidate.Y, candidate.X];
 
                     if (tentativeScore < gScore[candidate.Y, candidate.X])
                     {
@@ -113,10 +155,9 @@ namespace day15
                             openSet.Add(candidate);
                         }
                     }
-
                 }
-
             }
+
             throw new Exception("Couldn't find best path");
         }
 
@@ -157,7 +198,6 @@ namespace day15
         public int X { get; }
         public int Y { get; }
         public int Risk { get; }
-        public int CostToHere { get; set; } = Int32.MaxValue;
 
         public Point(int x,int y, int risk)
         {
@@ -176,16 +216,5 @@ namespace day15
     {
         public List<Point> Points { get; set; } = new List<Point>();
         public int Total => Points.Skip(1).Sum(x => x.Risk);
-
-        public Point Last() => Points.Last();
-        public bool Contains(Point point) => Points.Contains(point);
-
-        public Path Concat(Point point) => Concat(new[] { point });
-
-        private Path Concat(Point[] points) =>
-            new Path
-            {
-                Points = Points.Concat(points).ToList()
-            };
     }
 }
