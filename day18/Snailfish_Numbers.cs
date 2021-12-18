@@ -82,16 +82,21 @@ namespace day18
                         var leftLiteral = (LiteralSNode)leftPair.Left;
                         var rightLiteral = (LiteralSNode)leftPair.Right;
 
+                        var newNode = new LiteralSNode(0);
                         if (leftLiteral.Previous != null)
                         {
                             leftLiteral.Previous.Value += leftLiteral.Value;
+                            leftLiteral.Previous.Next = newNode;
+                            newNode.Previous = leftLiteral.Previous;
                         }
                         if (rightLiteral.Next != null)
                         {
                             rightLiteral.Next.Value += rightLiteral.Value;
+                            rightLiteral.Next.Previous = newNode;
+                            newNode.Next = rightLiteral.Next;
                         }
 
-                        pairNode.Left = new LiteralSNode(0);
+                        pairNode.Left = newNode;
                         return true;
 
                     }
@@ -101,20 +106,57 @@ namespace day18
                         var leftLiteral = (LiteralSNode)rightPair.Left;
                         var rightLiteral = (LiteralSNode)rightPair.Right;
 
+                        var newNode = new LiteralSNode(0);
                         if (leftLiteral.Previous != null)
                         {
                             leftLiteral.Previous.Value += leftLiteral.Value;
+                            leftLiteral.Previous.Next = newNode;
+                            newNode.Previous = leftLiteral.Previous;
                         }
                         if (rightLiteral.Next != null)
                         {
                             rightLiteral.Next.Value += rightLiteral.Value;
+                            rightLiteral.Next.Previous = newNode;
+                            newNode.Next = rightLiteral.Next;
                         }
 
-                        pairNode.Right= new LiteralSNode(0);
+                        pairNode.Right = newNode;
                         return true;
                     }
+                }
 
-                    return false;
+                if (pairNode.Left is LiteralSNode { Value: > 9 } leftLit)
+                {
+                    var prev = leftLit.Previous;
+                    var next = leftLit.Next;
+                    var newLeft = new LiteralSNode((int)Math.Floor(leftLit.Value / 2.0));
+                    var newRight = new LiteralSNode((int)Math.Ceiling(leftLit.Value / 2.0));
+                    var newNode = new PairNode(newLeft, newRight);
+                    newLeft.Previous = prev;
+                    if (prev != null) prev.Next = newLeft;
+                    newLeft.Next = newRight;
+                    newRight.Previous = newLeft;
+                    newRight.Next = next;
+                    if (next != null) next.Previous = newRight;
+                    pairNode.Left = newNode;
+                    return true;
+                }
+
+                if (pairNode.Right is LiteralSNode { Value: > 9 } rightLit)
+                {
+                    var prev = rightLit.Previous;
+                    var next = rightLit.Next;
+                    var newLeft = new LiteralSNode((int)Math.Floor(rightLit.Value / 2.0));
+                    var newRight = new LiteralSNode((int)Math.Ceiling(rightLit.Value / 2.0));
+                    var newNode = new PairNode(newLeft, newRight);
+                    newLeft.Previous = prev;
+                    if (prev != null) prev.Next = newLeft;
+                    newLeft.Next = newRight;
+                    newRight.Previous = newLeft;
+                    newRight.Next = next;
+                    if (next != null) next.Previous = newRight;
+                    pairNode.Right = newNode;
+                    return true;
                 }
 
                 return Reduce(pairNode.Left, level + 1)
