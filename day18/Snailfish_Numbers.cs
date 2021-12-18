@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using common;
 using NUnit.Framework;
@@ -136,6 +137,63 @@ namespace day18
             }
 
             Assert.AreEqual(4137, num.Magnitude);
+        }
+
+        [Test]
+        public void Solves_Puzzle_2_Sample()
+        {
+            var lines = @"[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]
+[[[5,[2,8]],4],[5,[[9,9],0]]]
+[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]
+[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]
+[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]
+[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]
+[[[[5,4],[7,7]],8],[[8,3],8]]
+[[9,3],[[9,9],[6,[4,9]]]]
+[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]
+[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]".Replace("\r", "").Split("\n");
+
+            var mags = new List<int>();
+            for (var i = 0; i<lines.Length; i++)
+            {
+                var num = (PairNode)Parse(lines[i]);
+
+                for (var j = 0; j < lines.Length; j++)
+                {
+                    if (j == i) continue;
+
+                    var numToAdd = (PairNode)Parse(lines[j]);
+                    var result = num.Add(numToAdd);
+                    result.TotalReduce();
+
+                    mags.Add(result.Magnitude);
+                }
+            }
+            Assert.AreEqual(3993, mags.Max());
+        }
+
+        [Test]
+        public void Solves_Puzzle_2()
+        {
+            var lines = Resources.GetResourceLines(typeof(Snailfish_Numbers), "day18.input.txt");
+
+            var mags = new List<int>();
+            for (var i = 0; i<lines.Length; i++)
+            {
+                var num = (PairNode)Parse(lines[i]);
+
+                for (var j = 0; j < lines.Length; j++)
+                {
+                    if (j == i) continue;
+
+                    var numToAdd = (PairNode)Parse(lines[j]);
+                    var result = num.Add(numToAdd);
+                    result.TotalReduce();
+
+                    mags.Add(result.Magnitude);
+                }
+            }
+            Assert.AreEqual(0, mags.Max());
         }
 
         private int MaxLevel(SnailfishNode node, int currentMax = 1, int level = 0)
