@@ -35,11 +35,8 @@ namespace day18
             var a = (PairNode)Parse("[[[[4,3],4],4],[7,[[8,4],9]]]");
             var b = (PairNode)Parse("[1,1]");
 
-            
-            var num = new PairNode(a, b);
-            a.LastLiteral.Next = b.FirstLiteral;
-            b.FirstLiteral.Previous = a.LastLiteral;
-            
+            var num = a.Add(b);
+
             Console.WriteLine(num);
             while(Reduce(num)) Console.WriteLine(num);
 
@@ -53,6 +50,88 @@ namespace day18
             var nodes = lines.Select(Parse);
             var maxLevel = nodes.Max(x => MaxLevel(x));
             Assert.AreEqual(5, maxLevel);
+        }
+
+        [Test]
+        [TestCase("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]", 1384)]
+        public void Have_Magnitude(string input, int expectedMagnitude)
+        {
+            var node = Parse(input);
+            Assert.AreEqual(expectedMagnitude, node.Magnitude);
+        }
+
+        [Test]
+        [TestCase(4, "[[[[1,1],[2,2]],[3,3]],[4,4]]")]
+        [TestCase(5, "[[[[3,0],[5,3]],[4,4]],[5,5]]")]
+        [TestCase(6, "[[[[5,0],[7,4]],[5,5]],[6,6]]")]
+        public void Are_Summed_In_Mysterious_Ways(int range, string expected)
+        {
+            var pairs = Enumerable.Range(1, range)
+                .Select(x => new PairNode(new LiteralSNode(x), new LiteralSNode(x)))
+                .ToArray();
+            var num = pairs[0];
+            for (var i = 1; i < pairs.Length; i++)
+            {
+                num = num.Add(pairs[i]);
+                TotalReduce(num);
+            }
+            Console.WriteLine(num);
+            Assert.AreEqual(expected, num.ToString());
+        }
+
+        [Test]
+        public void Solves_Sample_Puzzle()
+        {
+            var lines = @"[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]
+[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]
+[[2,[[0,8],[3,4]]],[[[6,7],1],[7,[1,6]]]]
+[[[[2,4],7],[6,[0,5]]],[[[6,8],[2,8]],[[2,1],[4,5]]]]
+[7,[5,[[3,8],[1,4]]]]
+[[2,[2,2]],[8,[8,1]]]
+[2,9]
+[1,[[[9,3],9],[[9,0],[0,7]]]]
+[[[5,[7,4]],7],1]
+[[[[4,2],2],6],[8,7]]".Replace("\r", "").Split("\n", StringSplitOptions.RemoveEmptyEntries);
+            var nodes = lines.Select(Parse).Cast<PairNode>().ToArray();
+
+            var num = (PairNode)nodes[0];
+
+            for (var i = 1; i < nodes.Length; i++)
+            {
+                Console.WriteLine(num + " + ");
+                Console.WriteLine(nodes[i] + " = ");
+                
+                num = num.Add(nodes[i]);
+                
+                TotalReduce(num);
+
+                Console.WriteLine(num);
+                Console.WriteLine();
+            }
+
+            Assert.AreEqual(3488, num.Magnitude);
+        }
+
+        [Test]
+        public void Solves_Puzzle_1()
+        {
+            var lines = Resources.GetResourceLines(typeof(Snailfish_Numbers), "day18.input.txt");
+            var nodes = lines.Select(Parse).Cast<PairNode>().ToArray();
+
+            var num = (PairNode)nodes[0];
+            TotalReduce(num);
+            for (var i = 1; i < nodes.Length; i++)
+            {
+                num = num.Add(nodes[i]);
+                TotalReduce(num);
+            }
+
+            Assert.AreEqual(0, num.Magnitude);
+        }
+
+        private void TotalReduce(SnailfishNode a)
+        {
+            while (Reduce(a)) ;
         }
 
         private int MaxLevel(SnailfishNode node, int currentMax = 1, int level = 0)
@@ -79,83 +158,27 @@ namespace day18
                 {
                     if (pairNode.Left is PairNode leftPair)
                     {
-                        var leftLiteral = (LiteralSNode)leftPair.Left;
-                        var rightLiteral = (LiteralSNode)leftPair.Right;
-
-                        var newNode = new LiteralSNode(0);
-                        if (leftLiteral.Previous != null)
-                        {
-                            leftLiteral.Previous.Value += leftLiteral.Value;
-                            leftLiteral.Previous.Next = newNode;
-                            newNode.Previous = leftLiteral.Previous;
-                        }
-                        if (rightLiteral.Next != null)
-                        {
-                            rightLiteral.Next.Value += rightLiteral.Value;
-                            rightLiteral.Next.Previous = newNode;
-                            newNode.Next = rightLiteral.Next;
-                        }
-
-                        pairNode.Left = newNode;
+                        pairNode.Left = leftPair.Explode();
                         return true;
 
                     }
 
                     if (pairNode.Right is PairNode rightPair)
                     {
-                        var leftLiteral = (LiteralSNode)rightPair.Left;
-                        var rightLiteral = (LiteralSNode)rightPair.Right;
-
-                        var newNode = new LiteralSNode(0);
-                        if (leftLiteral.Previous != null)
-                        {
-                            leftLiteral.Previous.Value += leftLiteral.Value;
-                            leftLiteral.Previous.Next = newNode;
-                            newNode.Previous = leftLiteral.Previous;
-                        }
-                        if (rightLiteral.Next != null)
-                        {
-                            rightLiteral.Next.Value += rightLiteral.Value;
-                            rightLiteral.Next.Previous = newNode;
-                            newNode.Next = rightLiteral.Next;
-                        }
-
-                        pairNode.Right = newNode;
+                        pairNode.Right = rightPair.Explode();
                         return true;
                     }
                 }
 
                 if (pairNode.Left is LiteralSNode { Value: > 9 } leftLit)
                 {
-                    var prev = leftLit.Previous;
-                    var next = leftLit.Next;
-                    var newLeft = new LiteralSNode((int)Math.Floor(leftLit.Value / 2.0));
-                    var newRight = new LiteralSNode((int)Math.Ceiling(leftLit.Value / 2.0));
-                    var newNode = new PairNode(newLeft, newRight);
-                    newLeft.Previous = prev;
-                    if (prev != null) prev.Next = newLeft;
-                    newLeft.Next = newRight;
-                    newRight.Previous = newLeft;
-                    newRight.Next = next;
-                    if (next != null) next.Previous = newRight;
-                    pairNode.Left = newNode;
+                    pairNode.Left = leftLit.Split();
                     return true;
                 }
 
                 if (pairNode.Right is LiteralSNode { Value: > 9 } rightLit)
                 {
-                    var prev = rightLit.Previous;
-                    var next = rightLit.Next;
-                    var newLeft = new LiteralSNode((int)Math.Floor(rightLit.Value / 2.0));
-                    var newRight = new LiteralSNode((int)Math.Ceiling(rightLit.Value / 2.0));
-                    var newNode = new PairNode(newLeft, newRight);
-                    newLeft.Previous = prev;
-                    if (prev != null) prev.Next = newLeft;
-                    newLeft.Next = newRight;
-                    newRight.Previous = newLeft;
-                    newRight.Next = next;
-                    if (next != null) next.Previous = newRight;
-                    pairNode.Right = newNode;
+                    pairNode.Right = rightLit.Split();
                     return true;
                 }
 
@@ -206,10 +229,13 @@ namespace day18
 
     abstract class SnailfishNode
     {
+        public abstract int Magnitude { get; }
     }
 
     class LiteralSNode : SnailfishNode
     {
+        public override int Magnitude => Value;
+
         public int Value { get; set; }
 
         public LiteralSNode(int value)
@@ -224,10 +250,28 @@ namespace day18
         {
             return Value.ToString();
         }
+
+        public PairNode Split()
+        {
+            var prev = Previous;
+            var next = Next;
+            var newLeft = new LiteralSNode((int)Math.Floor(Value / 2.0));
+            var newRight = new LiteralSNode((int)Math.Ceiling(Value / 2.0));
+            var newNode = new PairNode(newLeft, newRight);
+            newLeft.Previous = prev;
+            if (prev != null) prev.Next = newLeft;
+            newLeft.Next = newRight;
+            newRight.Previous = newLeft;
+            newRight.Next = next;
+            if (next != null) next.Previous = newRight;
+            return newNode;
+        }
     }
 
     class PairNode : SnailfishNode
     {
+        public override int Magnitude => Left.Magnitude * 3 + Right.Magnitude * 2;
+
         public LiteralSNode FirstLiteral => Left is LiteralSNode firstLiteral ? firstLiteral : ((PairNode)Left).FirstLiteral;
         public LiteralSNode LastLiteral => Right is LiteralSNode lastLiteral ? lastLiteral : ((PairNode)Right).LastLiteral;
 
@@ -242,6 +286,37 @@ namespace day18
         public override string ToString()
         {
             return $"[{Left},{Right}]";
+        }
+
+        public PairNode Add(PairNode b)
+        {
+            var num = new PairNode(this, b);
+            LastLiteral.Next = b.FirstLiteral;
+            b.FirstLiteral.Previous = LastLiteral;
+            return num;
+        }
+
+        public LiteralSNode Explode()
+        {
+            var leftLiteral = (LiteralSNode)Left;
+            var rightLiteral = (LiteralSNode)Right;
+
+            var newNode = new LiteralSNode(0);
+            if (leftLiteral.Previous != null)
+            {
+                leftLiteral.Previous.Value += leftLiteral.Value;
+                leftLiteral.Previous.Next = newNode;
+                newNode.Previous = leftLiteral.Previous;
+            }
+
+            if (rightLiteral.Next != null)
+            {
+                rightLiteral.Next.Value += rightLiteral.Value;
+                rightLiteral.Next.Previous = newNode;
+                newNode.Next = rightLiteral.Next;
+            }
+
+            return newNode;
         }
     }
 
