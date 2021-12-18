@@ -29,6 +29,24 @@ namespace day18
         }
 
         [Test]
+        public void Are_Exploded_And_Split_After_Adding()
+        {
+            const string expected = "[[[[0,7],4],[[7,8],[6,0]]],[8,1]]";
+            var a = (PairNode)Parse("[[[[4,3],4],4],[7,[[8,4],9]]]");
+            var b = (PairNode)Parse("[1,1]");
+
+            
+            var num = new PairNode(a, b);
+            a.LastLiteral.Next = b.FirstLiteral;
+            b.FirstLiteral.Previous = a.LastLiteral;
+            
+            Console.WriteLine(num);
+            while(Reduce(num)) Console.WriteLine(num);
+
+            Assert.AreEqual(expected, num.ToString());
+        }
+
+        [Test]
         public void Input_Has_Max_5_Levels()
         {
             var lines = Resources.GetResourceLines(typeof(Snailfish_Numbers), "day18.input.txt");
@@ -168,6 +186,9 @@ namespace day18
 
     class PairNode : SnailfishNode
     {
+        public LiteralSNode FirstLiteral => Left is LiteralSNode firstLiteral ? firstLiteral : ((PairNode)Left).FirstLiteral;
+        public LiteralSNode LastLiteral => Right is LiteralSNode lastLiteral ? lastLiteral : ((PairNode)Right).LastLiteral;
+
         public SnailfishNode Left { get; set; }
         public SnailfishNode Right { get; set; }
 
