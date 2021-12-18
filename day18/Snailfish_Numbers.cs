@@ -21,7 +21,7 @@ namespace day18
         public void Are_Reduced_By_Exploding(string input, string expectedReduced)
         {
             var node = Parse(input);
-            var reduced = Reduce(node);
+            var reduced = node.TryExplode(1);
             var result = node.ToString();
             Console.WriteLine(result);
 
@@ -36,9 +36,10 @@ namespace day18
             var b = (PairNode)Parse("[1,1]");
 
             var num = a.Add(b);
+            num.TotalReduce();
 
             Console.WriteLine(num);
-            while(Reduce(num)) Console.WriteLine(num);
+
 
             Assert.AreEqual(expected, num.ToString());
         }
@@ -73,7 +74,7 @@ namespace day18
             for (var i = 1; i < pairs.Length; i++)
             {
                 num = num.Add(pairs[i]);
-                TotalReduce(num);
+                num.TotalReduce();
             }
             Console.WriteLine(num);
             Assert.AreEqual(expected, num.ToString());
@@ -92,18 +93,19 @@ namespace day18
 [1,[[[9,3],9],[[9,0],[0,7]]]]
 [[[5,[7,4]],7],1]
 [[[[4,2],2],6],[8,7]]".Replace("\r", "").Split("\n", StringSplitOptions.RemoveEmptyEntries);
-            var nodes = lines.Select(Parse).Cast<PairNode>().ToArray();
 
-            var num = (PairNode)nodes[0];
+            var num = (PairNode)Parse(lines[0]);
 
-            for (var i = 1; i < nodes.Length; i++)
+            for (var i = 1; i < lines.Length; i++)
             {
+                var nodeToAdd = (PairNode)Parse(lines[i]);
+
                 Console.WriteLine(num + " + ");
-                Console.WriteLine(nodes[i] + " = ");
-                
-                num = num.Add(nodes[i]);
-                
-                TotalReduce(num);
+                Console.WriteLine(nodeToAdd + " = ");
+
+                num = num.Add(nodeToAdd);
+
+                num.TotalReduce();
 
                 Console.WriteLine(num);
                 Console.WriteLine();
@@ -116,22 +118,24 @@ namespace day18
         public void Solves_Puzzle_1()
         {
             var lines = Resources.GetResourceLines(typeof(Snailfish_Numbers), "day18.input.txt");
-            var nodes = lines.Select(Parse).Cast<PairNode>().ToArray();
+            var num = (PairNode)Parse(lines[0]);
 
-            var num = (PairNode)nodes[0];
-            TotalReduce(num);
-            for (var i = 1; i < nodes.Length; i++)
+            for (var i = 1; i < lines.Length; i++)
             {
-                num = num.Add(nodes[i]);
-                TotalReduce(num);
+                var nodeToAdd = (PairNode)Parse(lines[i]);
+
+                Console.WriteLine(num + " + ");
+                Console.WriteLine(nodeToAdd + " = ");
+
+                num = num.Add(nodeToAdd);
+
+                num.TotalReduce();
+
+                Console.WriteLine(num);
+                Console.WriteLine();
             }
 
-            Assert.AreEqual(0, num.Magnitude);
-        }
-
-        private void TotalReduce(SnailfishNode a)
-        {
-            while (Reduce(a)) ;
+            Assert.AreEqual(4137, num.Magnitude);
         }
 
         private int MaxLevel(SnailfishNode node, int currentMax = 1, int level = 0)
@@ -148,45 +152,6 @@ namespace day18
                 currentMax = Math.Max(level, currentMax);
             }
             return currentMax;
-        }
-
-        private bool Reduce(SnailfishNode node, int level = 1)
-        {
-            if (node is PairNode pairNode)
-            {
-                if (level >= 4)
-                {
-                    if (pairNode.Left is PairNode leftPair)
-                    {
-                        pairNode.Left = leftPair.Explode();
-                        return true;
-
-                    }
-
-                    if (pairNode.Right is PairNode rightPair)
-                    {
-                        pairNode.Right = rightPair.Explode();
-                        return true;
-                    }
-                }
-
-                if (pairNode.Left is LiteralSNode { Value: > 9 } leftLit)
-                {
-                    pairNode.Left = leftLit.Split();
-                    return true;
-                }
-
-                if (pairNode.Right is LiteralSNode { Value: > 9 } rightLit)
-                {
-                    pairNode.Right = rightLit.Split();
-                    return true;
-                }
-
-                return Reduce(pairNode.Left, level + 1)
-                    || Reduce(pairNode.Right, level + 1);
-            }
-
-            return false;
         }
 
         private SnailfishNode Parse(string input)
@@ -227,9 +192,21 @@ namespace day18
         }
     }
 
-    abstract class SnailfishNode
+    public abstract class SnailfishNode
     {
         public abstract int Magnitude { get; }
+
+        public void TotalReduce()
+        {
+            bool reduced = true;
+            while(reduced)
+            {
+                reduced = TryExplode(1) || TrySplit();
+            }
+        }
+
+        public abstract bool TryExplode(int level);
+        public abstract bool TrySplit();
     }
 
     class LiteralSNode : SnailfishNode
@@ -265,6 +242,15 @@ namespace day18
             newRight.Next = next;
             if (next != null) next.Previous = newRight;
             return newNode;
+        }
+
+        public override bool TryExplode(int level)
+        {
+            return false;
+        }
+        public override bool TrySplit()
+        {
+            return false;
         }
     }
 
@@ -317,6 +303,44 @@ namespace day18
             }
 
             return newNode;
+        }
+
+        public override bool TryExplode(int level)
+        {
+            if (level >= 4)
+            {
+                if (Left is PairNode leftPair)
+                {
+                    Left = leftPair.Explode();
+                    return true;
+                }
+
+                if (Right is PairNode rightPair)
+                {
+                    Right = rightPair.Explode();
+                    return true;
+                }
+            }
+
+            return Left.TryExplode(level + 1)
+                   || Right.TryExplode(level + 1);
+        }
+
+        public override bool TrySplit()
+        {
+            if (Left is LiteralSNode { Value: > 9 } leftLit)
+            {
+                Left = leftLit.Split();
+                return true;
+            }
+
+            if (Right is LiteralSNode { Value: > 9 } rightLit)
+            {
+                Right = rightLit.Split();
+                return true;
+            }
+
+            return Left.TrySplit() || Right.TrySplit();
         }
     }
 
