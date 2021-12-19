@@ -61,15 +61,13 @@ namespace day19
 
         [Test]
         [TestCase("day19.sample.txt", 3621)]
-        [TestCase("day19.input.txt", 0)]
+        [TestCase("day19.input.txt", 12226)]
         public void Solves_Puzzle_2(string resource, int expectedDistance)
         {
             var input = Resources.GetResourceLines(typeof(Scanner_Triangualation), resource);
             var scanners = Parse(input);
 
             PositionScanners(scanners);
-
-            var unique = scanners.SelectMany(x => x.Probes.Select(y => y.AdjustedLocation.ToString())).Distinct().ToList();
 
             var all = scanners
                 .Join(scanners, s => true, s => true, (a, b) => (a, b))
