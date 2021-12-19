@@ -42,13 +42,47 @@ namespace day19
         }
 
         [Test]
-        [TestCase("day19.sample.txt")]
-        [TestCase("day19.input.txt")]
-        public void Solves_Sample(string resource)
+        [TestCase("day19.sample.txt", 79)]
+        [TestCase("day19.input.txt", 467)]
+        public void Solves_Puzzle_1(string resource, int expectedProbes)
         {
             var input = Resources.GetResourceLines(typeof(Scanner_Triangualation), resource);
             var scanners = Parse(input);
 
+            PositionScanners(scanners);
+
+            var unique = scanners.SelectMany(x => x.Probes.Select(y => y.AdjustedLocation.ToString())).Distinct().ToList();
+            unique.Dump();
+
+            unique.Count.Dump();
+
+            Assert.AreEqual(expectedProbes, unique.Count);
+        }
+
+        [Test]
+        [TestCase("day19.sample.txt", 3621)]
+        [TestCase("day19.input.txt", 0)]
+        public void Solves_Puzzle_2(string resource, int expectedDistance)
+        {
+            var input = Resources.GetResourceLines(typeof(Scanner_Triangualation), resource);
+            var scanners = Parse(input);
+
+            PositionScanners(scanners);
+
+            var unique = scanners.SelectMany(x => x.Probes.Select(y => y.AdjustedLocation.ToString())).Distinct().ToList();
+
+            var all = scanners
+                .Join(scanners, s => true, s => true, (a, b) => (a, b))
+                .Select(ab => (ab, diff:ab.a.Offset - ab.b.Offset))
+                .Select(abd => (abd.ab, abd.diff, dist:Math.Abs(abd.diff.X) + Math.Abs(abd.diff.Y) + Math.Abs(abd.diff.Z)));
+
+            var maxDistance = all.Max(x => x.dist);
+
+            Assert.AreEqual(expectedDistance, maxDistance);
+        }
+
+        private static void PositionScanners(List<Scanner> scanners)
+        {
             var distances = CalculateAllDistances(scanners);
 
             var equalProbes = FindEqualProbes(distances, 12);
@@ -56,7 +90,7 @@ namespace day19
             //ListEqualProbes(equalProbes);
 
             var positioned = new List<Scanner> {scanners[0]};
-            var unpositioned = new Queue<Scanner>(scanners.Except(new []{scanners[0]}));
+            var unpositioned = new Queue<Scanner>(scanners.Except(new[] {scanners[0]}));
             while (unpositioned.Count > 0)
             {
                 var scanner = unpositioned.Dequeue();
@@ -70,7 +104,7 @@ namespace day19
 
                 var wasPositioned = false;
 
-                foreach(var rotationSet in RotationMatrixes)
+                foreach (var rotationSet in RotationMatrixes)
                 {
                     var rotation = rotationSet.matrix;
                     //Console.WriteLine("Matrix: " + rotationSet.index + " - " + RotationCandidates[rotationSet.index]);
@@ -99,7 +133,7 @@ namespace day19
 
                             //Console.WriteLine(adjusted + " (" + newDiff.Length() + ")");
 
-                            return (diff:newDiff, adjusted);
+                            return (diff: newDiff, adjusted);
                         })
                         .ToArray();
 
@@ -117,9 +151,10 @@ namespace day19
                         positioned.Add(scanner);
                         wasPositioned = true;
 
-                        Console.WriteLine("Well waddya know");
+                        //Console.WriteLine("Well waddya know");
                         break;
                     }
+
                     //Console.WriteLine();
                 }
 
@@ -128,13 +163,6 @@ namespace day19
                     unpositioned.Enqueue(scanner);
                 }
             }
-
-            var unique = scanners.SelectMany(x => x.Probes.Select(y => y.AdjustedLocation.ToString())).Distinct().ToList();
-            unique.Dump();
-
-            unique.Count.Dump();
-
-            Assert.Fail();
         }
 
         private static void ListEqualProbes(Dictionary<Scanner, Dictionary<Scanner, Dictionary<Probe, Probe>>> equalProbes)
