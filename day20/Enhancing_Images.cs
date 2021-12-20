@@ -35,6 +35,7 @@ namespace day20
         }
 
         [Test]
+        [Category("Slow")]
         public void Expands_Sample_Image_A_Lot()
         {
             var builder = ExecuteSample(30);
@@ -43,6 +44,7 @@ namespace day20
         }
 
         [Test]
+        [Category("Slow")]
         public void Enhances_Reddit_Input()
         {
             const int steps = 2;
@@ -77,6 +79,7 @@ namespace day20
         }
 
         [Test]
+        [Category("Slow")]
         public void Enhances_Input()
         {
             const int steps = 2;
@@ -111,6 +114,7 @@ namespace day20
         }
 
         [Test]
+        [Category("Slow")]
         public void Enhances_Input_A_Lot()
         {
             const int steps = 50;
@@ -161,8 +165,8 @@ namespace day20
 
             var builder = new StringBuilder();
 
-            var evenState = alg[0] == '.' ? "0" : "1";
-            var oddState = alg[0] == '.' ? "1" : "0";
+            var evenState = alg[0] == '#' ? "0" : alg[0] == '.' ? "0" : "1";
+            var oddState = alg[0] == '#' ? alg[0] == '.' ? "0" : "1" : "0";
 
             WritePoints(points, evenState, builder);
 
