@@ -16,7 +16,7 @@ namespace day20
     public class Enhancing_Images
     {
         private string alg;
-        private List<Vector2> points;
+        private List<Point> points;
 
         [SetUp]
         public void Setup()
@@ -26,10 +26,94 @@ namespace day20
         [Test]
         public void Expands_Sample_Image_Twice()
         {
+            const int expectedPixels = 35;
+            var builder = ExecuteSample(2);
+
+            Console.WriteLine(builder.ToString());
+            Approvals.Verify(builder.ToString());
+            Assert.AreEqual(expectedPixels, points.Count);
+        }
+
+        [Test]
+        public void Expands_Sample_Image_A_Lot()
+        {
+            var builder = ExecuteSample(30);
+
+            Console.WriteLine(builder.ToString());
+        }
+
+        [Test]
+        public void Enhances_Reddit_Input()
+        {
+            const int steps = 2;
+
+            const int expectedPixels = 5326;
+            var lines = Resources.GetResourceLines(typeof(Enhancing_Images), "day20.redditinput.txt");
+
+            alg = lines[0];
+            points = ParsePoints(lines);
+            var evenState = alg[0] == '#' ? "0" : "1";
+            var oddState = alg[0] == '#' ? "1" : "0";
+
+            WritePoints(points);
+
+            for (var step = 0; step < steps; step++)
+            {
+                var state = step % 2 == 0 ? evenState : oddState;
+
+                var newPoints = Enhance(points, alg, state);
+
+                points = newPoints;
+
+                WritePoints(points);
+            }
+
+            var builder = new StringBuilder();
+            WritePoints(points, builder);
+
+            // 7240?
+            Assert.AreEqual(expectedPixels, points.Count);
+            Approvals.Verify(builder.ToString());
+        }
+
+        [Test]
+        public void Enhances_Input()
+        {
             const int steps = 2;
 
             const int expectedPixels = 35;
-            var input = @"..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#
+            var lines = Resources.GetResourceLines(typeof(Enhancing_Images), "day20.input.txt");
+
+            alg = lines[0];
+            points = ParsePoints(lines);
+            var evenState = alg[0] == '#' ? "0" : "1";
+            var oddState = alg[0] == '#' ? "1" : "0";
+
+            WritePoints(points);
+
+            for (var step = 0; step < steps; step++)
+            {
+                var state = step % 2 == 0 ? evenState : oddState;
+
+                var newPoints = Enhance(points, alg, state);
+
+                points = newPoints;
+
+                WritePoints(points);
+            }
+
+            var builder = new StringBuilder();
+            WritePoints(points, builder);
+
+            // 7240?
+            Assert.AreEqual(expectedPixels, points.Count);
+            Approvals.Verify(builder.ToString());
+        }
+
+        private StringBuilder ExecuteSample(int steps)
+        {
+            var input =
+                @"..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#
 
 #..#.
 #....
@@ -45,66 +129,47 @@ namespace day20
 
             WritePoints(points, builder);
 
+            var evenState = alg[0] == '.' ? "0" : "1";
+            var oddState = alg[0] == '.' ? "1" : "0";
+
             for (var step = 0; step < steps; step++)
             {
-                var newPoints = Enhance(points, alg);
+                var state = step % 2 == 0 ? evenState : oddState;
+                var newPoints = Enhance(points, alg, state);
 
                 points = newPoints;
                 WritePoints(points, builder);
             }
 
-            Approvals.Verify(builder.ToString());
-            //Assert.AreEqual(expectedPixels, points.Count);
+            return builder;
         }
 
-        [Test]
-        public void Enhances_Input()
+        private static List<Point> Enhance(List<Point> points, string alg, string outsideState)
         {
-            const int steps = 2;
-
-            const int expectedPixels = 35;
-            var lines = Resources.GetResourceLines(typeof(Enhancing_Images), "day20.input.txt");
-
-            alg = lines[0];
-            points = ParsePoints(lines);
-
-            WritePoints(points);
-
-            for (var step = 0; step < steps; step++)
+            var minX = points.Min(p => p.X);
+            var maxX = points.Max(p => p.X);
+            var minY = points.Min(p => p.Y);
+            var maxY = points.Max(p => p.Y);
+            var newPoints = new List<Point>();
+            for (var y = minY - 1; y <= maxY + 1; y++)
             {
-                var newPoints = Enhance(points, alg);
-
-                points = newPoints;
-                WritePoints(points);
-            }
-
-            var builder = new StringBuilder();
-            WritePoints(points, builder);
-
-            // 7240?
-            Assert.AreEqual(expectedPixels, points.Count);
-            Approvals.Verify(builder.ToString());
-        }
-
-        private static List<Vector2> Enhance(List<Vector2> points, string alg)
-        {
-            var width = (int) MathF.Ceiling(points.Max(p => p.X) - points.Min(p => p.X)) + 4;
-            var height = (int) MathF.Ceiling(points.Max(p => p.Y) - points.Min(p => p.Y)) + 4;
-            var minX = width / -2 - 2;
-            var maxX = width / 2 + 2;
-            var minY = height / -2 - 2;
-            var maxY = height / 2 + 2;
-            var newPoints = new List<Vector2>();
-            for (var y = minY - 1; y < maxY + 1; y++)
-            {
-                for (var x = minX - 1; x < maxX + 1; x++)
+                for (var x = minX - 1; x <= maxX + 1; x++)
                 {
                     var pointStr = "";
                     for (var y2 = -1; y2 <= 1; y2++)
                     {
                         for (var x2 = -1; x2 <= 1; x2++)
                         {
-                            pointStr += points.Contains(new Vector2(x + x2, y + y2)) ? "1" : "0";
+                            var px = x + x2;
+                            var py = y + y2;
+                            if (px < minX || px > maxX || py < minX || py > maxY)
+                            {
+                                pointStr += outsideState;
+                            }
+                            else
+                            {
+                                pointStr += points.Contains(new Point(px, py)) ? "1" : "0";
+                            }
                         }
                     }
 
@@ -112,7 +177,7 @@ namespace day20
                     var charAt = alg[pos];
                     if (charAt == '#')
                     {
-                        newPoints.Add(new Vector2(x, y));
+                        newPoints.Add(new Point(x, y));
                     }
                 }
             }
@@ -120,14 +185,12 @@ namespace day20
             return newPoints;
         }
 
-        private static List<Vector2> ParsePoints(string[] lines)
+        private static List<Point> ParsePoints(string[] lines)
         {
-            var  points = new List<Vector2>();
+            var  points = new List<Point>();
 
-            var width = lines[2].Length;
-            var height = lines.Length - 2;
-            var minX = width / -2;
-            var minY = height / -2;
+            var minX = 0;
+            var minY = 0;
 
             for (int i = 2, y = minY; i < lines.Length; i++, y++)
             {
@@ -136,7 +199,7 @@ namespace day20
                 {
                     if (line[j] == '#')
                     {
-                        points.Add(new Vector2(x, y));
+                        points.Add(new Point(x, y));
                     }
                 }
             }
@@ -144,18 +207,12 @@ namespace day20
             return points;
         }
 
-        private static void WritePoints(List<Vector2> points, StringBuilder builder = null)
+        private static void WritePoints(List<Point> points, StringBuilder builder = null)
         {
-            var width = (int) MathF.Ceiling(points.Max(p => p.X) - points.Min(p => p.X));
-            var height = (int) MathF.Ceiling(points.Max(p => p.Y) - points.Min(p => p.Y));
-            if (width % 2 == 0) width++;
-            if (height % 2 == 0) height++;
-            width = Math.Max(width, 15);
-            height = Math.Max(height, 15);
-            var minX = width / -2;
-            var maxX = width / 2;
-            var minY = height / -2;
-            var maxY = height / 2;
+            var minX = points.Min(p => p.X) - 1;
+            var maxX = points.Max(p => p.X) + 1;
+            var minY = points.Min(p => p.Y) - 1;
+            var maxY = points.Max(p => p.Y) + 1;
 
             Action<string> output = builder != null ? (s) => builder.Append(s) : Console.Write;
 
@@ -163,7 +220,7 @@ namespace day20
             {
                 for (var x = minX; x <= maxX; x++)
                 {
-                    if (points.Contains(new Vector2(x, y)))
+                    if (points.Contains(new Point(x, y)))
                     {
                         output("#");
                     }
@@ -179,4 +236,6 @@ namespace day20
             output("\r\n");
         }
     }
+
+    public record Point(int X, int Y);
 }

@@ -8,10 +8,12 @@
 
   <ItemGroup>
     <None Remove="input.txt" />
+    <None Remove="redditinput.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="input.txt" />
+    <EmbeddedResource Include="redditinput.txt" />
   </ItemGroup>
 
   <ItemGroup>
