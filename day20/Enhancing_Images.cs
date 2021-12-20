@@ -182,6 +182,46 @@ namespace day20
             return builder;
         }
 
+        [Test]
+        // https://www.reddit.com/r/adventofcode/comments/rko7ud/2021_day_20_part_3_mr_sierpi%C5%84ski_is_this_you_and/
+        [TestCase(@"..#.....#.......................#...............................#...............................................................#...............................................................................................................................#...............................................................................................................................................................................................................................................................
+
+...
+.#.
+...", Description = "Sierpinsky")]
+        [TestCase(@"..#.....#.......................#...............................................................................................#...............................................................................................................................................................................................................................................................................................................................................................................................
+
+...
+.#.
+...", Description = "TableCloth")]
+        public void ExecuteRedditFun(string input)
+        {
+            const int steps = 63;
+
+            var lines = input.Replace("\r", "").Split('\n');
+
+            alg = lines[0];
+            points = ParsePoints(lines);
+
+            var builder = new StringBuilder();
+
+            var evenState = alg[0] == '#' ? "0" : alg[0] == '.' ? "0" : "1";
+            var oddState = alg[0] == '#' ? alg[0] == '.' ? "0" : "1" : "0";
+
+            WritePoints(points, evenState, builder);
+
+            for (var step = 1; step <= steps; step++)
+            {
+                var state = step % 2 == 0 ? evenState : oddState;
+                var newPoints = Enhance(points, alg, state);
+
+                points = newPoints;
+                WritePoints(points, state, builder);
+            }
+
+            Console.WriteLine(builder.ToString());
+        }
+
         private static List<Point> Enhance(List<Point> points, string alg, string outsideState)
         {
             var minX = points.Min(p => p.X);
