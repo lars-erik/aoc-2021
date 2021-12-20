@@ -1,11 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using ApprovalTests;
+using ApprovalTests.Reporters;
 using common;
 using NUnit.Framework;
 
 namespace day18
 {
+    [TestFixture]
+    [UseReporter(typeof(VisualStudioReporter))]
     public class Snailfish_Numbers
     {
         [SetUp]
@@ -97,20 +102,25 @@ namespace day18
 
             var num = (PairNode)Parse(lines[0]);
 
+            var builder = new StringBuilder();
+
             for (var i = 1; i < lines.Length; i++)
             {
                 var nodeToAdd = (PairNode)Parse(lines[i]);
 
-                Console.WriteLine(num + " + ");
-                Console.WriteLine(nodeToAdd + " = ");
+                builder.AppendLine("  " + num);
+                builder.AppendLine("+ " + nodeToAdd);
 
                 num = num.Add(nodeToAdd);
 
                 num.TotalReduce();
 
-                Console.WriteLine(num);
-                Console.WriteLine();
+                builder.AppendLine("= " + num);
+                builder.AppendLine();
             }
+
+            Console.WriteLine(builder.ToString());
+            Approvals.Verify(builder.ToString());
 
             Assert.AreEqual(3488, num.Magnitude);
         }
@@ -180,12 +190,12 @@ namespace day18
             var mags = new List<int>();
             for (var i = 0; i<lines.Length; i++)
             {
-                var num = (PairNode)Parse(lines[i]);
-
                 for (var j = 0; j < lines.Length; j++)
                 {
                     if (j == i) continue;
 
+                    // TODO: really! Stop mutating these numbers. 🤦‍
+                    var num = (PairNode)Parse(lines[i]);
                     var numToAdd = (PairNode)Parse(lines[j]);
                     var result = num.Add(numToAdd);
                     result.TotalReduce();
@@ -193,7 +203,7 @@ namespace day18
                     mags.Add(result.Magnitude);
                 }
             }
-            Assert.AreEqual(0, mags.Max());
+            Assert.AreEqual(4573, mags.Max());
         }
 
         private int MaxLevel(SnailfishNode node, int currentMax = 1, int level = 0)
@@ -254,12 +264,26 @@ namespace day18
     {
         public abstract int Magnitude { get; }
 
-        public void TotalReduce()
+        public void TotalReduce(StringBuilder builder = null)
         {
             bool reduced = true;
-            while(reduced)
+            builder?.AppendLine("Reducing: ".PadRight(15, ' ') + this);
+            int index = 0;
+            while (reduced)
             {
-                reduced = TryExplode(1) || TrySplit();
+                reduced = TryExplode(1);
+                if (reduced)
+                {
+                    builder?.AppendLine(("Exploded " + (++index) + ":  ").PadRight(15, ' ') + this);
+                }
+                if (!reduced)
+                { 
+                    reduced = TrySplit();
+                    if (reduced)
+                    {
+                        builder?.AppendLine(("Split " + (++index) + ":  ").PadRight(15, ' ') + this);
+                    }
+                }
             }
         }
 
@@ -290,8 +314,8 @@ namespace day18
         {
             var prev = Previous;
             var next = Next;
-            var newLeft = new LiteralSNode((int)Math.Floor(Value / 2.0));
-            var newRight = new LiteralSNode((int)Math.Ceiling(Value / 2.0));
+            var newLeft = new LiteralSNode((int)Math.Floor((double)Value / 2));
+            var newRight = new LiteralSNode((int)Math.Ceiling((double)Value / 2));
             var newNode = new PairNode(newLeft, newRight);
             newLeft.Previous = prev;
             if (prev != null) prev.Next = newLeft;
@@ -392,13 +416,18 @@ namespace day18
                 return true;
             }
 
+            if (Left.TrySplit())
+            {
+                return true;
+            }
+
             if (Right is LiteralSNode { Value: > 9 } rightLit)
             {
                 Right = rightLit.Split();
                 return true;
             }
 
-            return Left.TrySplit() || Right.TrySplit();
+            return Right.TrySplit();
         }
     }
 
