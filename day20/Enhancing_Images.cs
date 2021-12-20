@@ -55,7 +55,7 @@ namespace day20
             var evenState = alg[0] == '#' ? "0" : "1";
             var oddState = alg[0] == '#' ? "1" : "0";
 
-            WritePoints(points);
+            WritePoints(points, evenState);
 
             for (var step = 0; step < steps; step++)
             {
@@ -65,11 +65,11 @@ namespace day20
 
                 points = newPoints;
 
-                WritePoints(points);
+                WritePoints(points, state);
             }
 
             var builder = new StringBuilder();
-            WritePoints(points, builder);
+            WritePoints(points, evenState, builder);
 
             // 7240?
             Assert.AreEqual(expectedPixels, points.Count);
@@ -81,7 +81,7 @@ namespace day20
         {
             const int steps = 2;
 
-            const int expectedPixels = 35;
+            const int expectedPixels = 5347;
             var lines = Resources.GetResourceLines(typeof(Enhancing_Images), "day20.input.txt");
 
             alg = lines[0];
@@ -89,7 +89,7 @@ namespace day20
             var evenState = alg[0] == '#' ? "0" : "1";
             var oddState = alg[0] == '#' ? "1" : "0";
 
-            WritePoints(points);
+            WritePoints(points, evenState);
 
             for (var step = 0; step < steps; step++)
             {
@@ -99,11 +99,11 @@ namespace day20
 
                 points = newPoints;
 
-                WritePoints(points);
+                WritePoints(points, state);
             }
 
             var builder = new StringBuilder();
-            WritePoints(points, builder);
+            WritePoints(points, evenState, builder);
 
             // 7240?
             Assert.AreEqual(expectedPixels, points.Count);
@@ -127,18 +127,18 @@ namespace day20
 
             var builder = new StringBuilder();
 
-            WritePoints(points, builder);
-
             var evenState = alg[0] == '.' ? "0" : "1";
             var oddState = alg[0] == '.' ? "1" : "0";
 
-            for (var step = 0; step < steps; step++)
+            WritePoints(points, evenState, builder);
+
+            for (var step = 1; step <= steps; step++)
             {
                 var state = step % 2 == 0 ? evenState : oddState;
                 var newPoints = Enhance(points, alg, state);
 
                 points = newPoints;
-                WritePoints(points, builder);
+                WritePoints(points, state, builder);
             }
 
             return builder;
@@ -162,7 +162,7 @@ namespace day20
                         {
                             var px = x + x2;
                             var py = y + y2;
-                            if (px < minX || px > maxX || py < minX || py > maxY)
+                            if (px < minX || px > maxX || py < minY || py > maxY)
                             {
                                 pointStr += outsideState;
                             }
@@ -207,20 +207,24 @@ namespace day20
             return points;
         }
 
-        private static void WritePoints(List<Point> points, StringBuilder builder = null)
+        private static void WritePoints(List<Point> points, string state, StringBuilder builder = null)
         {
-            var minX = points.Min(p => p.X) - 1;
-            var maxX = points.Max(p => p.X) + 1;
-            var minY = points.Min(p => p.Y) - 1;
-            var maxY = points.Max(p => p.Y) + 1;
+            var minX = points.Min(p => p.X);
+            var maxX = points.Max(p => p.X);
+            var minY = points.Min(p => p.Y);
+            var maxY = points.Max(p => p.Y);
 
             Action<string> output = builder != null ? (s) => builder.Append(s) : Console.Write;
 
-            for (var y = minY; y <= maxY; y++)
+            for (var y = Math.Min(minY - 5, -5); y <= Math.Max(maxY + 5, 5); y++)
             {
-                for (var x = minX; x <= maxX; x++)
+                for (var x = Math.Min(minX - 5, -5); x <= Math.Max(maxX + 5, 5); x++)
                 {
-                    if (points.Contains(new Point(x, y)))
+                    if (x < minX || x > maxX || y < minY || y > maxY)
+                    {
+                        output(state == "1" ? "#" : ".");
+                    } 
+                    else if (points.Contains(new Point(x, y)))
                     {
                         output("#");
                     }
