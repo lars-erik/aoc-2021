@@ -45,6 +45,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "day18", "day18\day18.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day19", "day19\day19.csproj", "{CCE837C9-B01A-4325-8E88-36C10F78DF04}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day20", "day20\day20.csproj", "{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -307,6 +309,18 @@ Global
 		{CCE837C9-B01A-4325-8E88-36C10F78DF04}.Release|x64.Build.0 = Release|Any CPU
 		{CCE837C9-B01A-4325-8E88-36C10F78DF04}.Release|x86.ActiveCfg = Release|Any CPU
 		{CCE837C9-B01A-4325-8E88-36C10F78DF04}.Release|x86.Build.0 = Release|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Debug|x64.Build.0 = Debug|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Debug|x86.Build.0 = Debug|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Release|x64.ActiveCfg = Release|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Release|x64.Build.0 = Release|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Release|x86.ActiveCfg = Release|Any CPU
+		{7CDC7936-8C7C-4A6D-8F09-9D67DD3F6A96}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
