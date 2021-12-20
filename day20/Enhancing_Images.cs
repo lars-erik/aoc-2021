@@ -110,6 +110,40 @@ namespace day20
             Approvals.Verify(builder.ToString());
         }
 
+        [Test]
+        public void Enhances_Input_A_Lot()
+        {
+            const int steps = 50;
+
+            const int expectedPixels = 17172;
+            var lines = Resources.GetResourceLines(typeof(Enhancing_Images), "day20.input.txt");
+
+            alg = lines[0];
+            points = ParsePoints(lines);
+            var evenState = alg[0] == '#' ? "0" : "1";
+            var oddState = alg[0] == '#' ? "1" : "0";
+
+            WritePoints(points, evenState);
+
+            for (var step = 0; step < steps; step++)
+            {
+                var state = step % 2 == 0 ? evenState : oddState;
+
+                var newPoints = Enhance(points, alg, state);
+
+                points = newPoints;
+
+                WritePoints(points, state);
+            }
+
+            var builder = new StringBuilder();
+            WritePoints(points, evenState, builder);
+
+            // 7240?
+            Assert.AreEqual(expectedPixels, points.Count);
+            Approvals.Verify(builder.ToString());
+        }
+
         private StringBuilder ExecuteSample(int steps)
         {
             var input =
