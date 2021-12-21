@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using common;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 
 namespace day21
 {
@@ -56,48 +57,81 @@ namespace day21
         }
 
         [Test]
-        public void Solo_Player_Wins_In_A_Bunch_Of_Universes()
+        [Category("Slow")]
+        [TestCase(4, 8, 444356092776315, 341960390180808, TestName="Sample game is won in a bunch of universes")]
+        [TestCase(8, 1, 113467910521040, 116741133558209, TestName="Input game is won in a bunch of universes")]
+        public void Game_Is_Won_In_A_Bunch_Of_Universes(int startPosA, int startPosB, long expectedA, long expectedB)
         {
-            var startPos = 4;
+            var wonUniverses = new List<Game>();
 
-            var wonUniverses = new List<UniversePosition>();
-
-            var universes = new List<UniversePosition>
+            var games = new List<Game>
             {
-                new(startPos, 0, 1)
+                new(
+                    0,
+                    new(1, startPosA, 0, 1),
+                    new(2, startPosB, 0, 1)
+                )
             };
 
-            int i = 0;
-            while(universes.Any(u => u.Score < 21) && i < 30)
+            int turn = 0;
+            while(games.Any(g => g.Player1.Score < 21 && g.Player2.Score < 21 && turn < 20))
             {
+                var playerIndex = turn % 2;
+                Console.WriteLine($"Player {playerIndex + 1}, turn {turn + 1}");
 
-                universes = universes
-                    .SelectMany(u =>
+                games = games
+                    .SelectMany(g =>
                     {
+                        var player = playerIndex == 0 ? g.Player1 : g.Player2;
+                        var other = playerIndex == 0 ? g.Player2 : g.Player1;
                         return offsets.Select(o =>
                         {
-                            var newPos = u.Position + o.offset;
+                            var newPos = player.Position + o.offset;
                             newPos = newPos > 10 ? newPos - 10 : newPos;
-                            return new UniversePosition(newPos, u.Score + newPos, u.Universes * o.count * (i > 0 ? 27 : 1));
+                            var newPlayer = player with {Position =  newPos, Score = player.Score + newPos, Universes = player.Universes * o.count };
+                            var newOther = other with {Universes = other.Universes * o.count};
+                            if (playerIndex == 0)
+                                return new Game(turn + 1, newPlayer, newOther);
+                            return new Game(turn + 1, newOther, newPlayer);
                         });
                     })
                     .ToList();
 
-                wonUniverses.AddRange(universes.Where(u => u.Score >= 21));
+                wonUniverses.AddRange(games.Where(g => g.Player1.Score >= 21 || g.Player2.Score >= 21));
 
-                universes = universes
-                    .Where(u => u.Score < 21)
+                games = games
+                    .Where(g => g.Player1.Score < 21 && g.Player2.Score < 21)
                     .ToList();
 
-                Console.WriteLine($"{++i}:");
-                DumpScores(universes);
-                wonUniverses.Sum(u => u.Universes).Dump();
+                turn++;
+
+                if (turn < 4)
+                {
+                    DumpGames(games);
+                }
+                else
+                { 
+                    DumpLeadingScores(games);
+                }
+
+                Console.WriteLine($"Player 1: {games.Where(g => g.Player1.Score >= 21).Sum(g => g.Player1.Universes)} / {games.Sum(g => g.Player1.Universes)}");
+                Console.WriteLine($"Player 2: {games.Where(g => g.Player2.Score >= 21).Sum(g => g.Player2.Universes)} / {games.Sum(g => g.Player2.Universes)}");
+
+                wonUniverses.Sum(x => x.Player1.Score > x.Player2.Score ? x.Player1.Universes : x.Player2.Universes).Dump();
                 Console.WriteLine();
             }
 
-            var total = wonUniverses.Sum(x => x.Universes);
-            Console.WriteLine(total);
-            Assert.AreEqual(444356092776315, total);
+            var totalA = wonUniverses.Where(x => x.Player1.Score > x.Player2.Score).Sum(x => x.Player1.Universes);
+            var totalB = wonUniverses.Where(x => x.Player2.Score > x.Player1.Score).Sum(x => x.Player2.Universes);
+            Console.WriteLine(totalA);
+            Console.WriteLine(totalB);
+            Assert.AreEqual(expectedA, totalA);
+            Assert.AreEqual(expectedB, totalB);
+        }
+
+        private void DumpGames(List<Game> games)
+        {
+            games.ForEach(g => Console.WriteLine($"{g.Round}: P1: {g.Player1.Position} {g.Player1.Score} / {g.Player1.Universes} P2: {g.Player2.Position} {g.Player2.Score} / {g.Player2.Universes}"));
         }
 
         private static void DumpScores(IEnumerable<UniversePosition> universes)
@@ -108,6 +142,17 @@ namespace day21
                 .OrderByDescending(x => x)
                 .ToList()
                 .ForEach(x => Console.WriteLine($"Score: {x.score} Universes: {x.universes}"));
+        }
+
+        private static void DumpLeadingScores(IEnumerable<Game> games)
+        {
+            games
+                .Select(g => g.Player1.Score > g.Player2.Score ? g.Player1 : g.Player2)
+                .GroupBy(u => (u.Player, u.Score))
+                .Select(p => (score:p.Key.Score, player:p.Key.Player, universes:p.Sum(u => u.Universes)))
+                .OrderByDescending(x => x)
+                .ToList()
+                .ForEach(x => Console.WriteLine($"Player: {x.player} Score: {x.score} Universes: {x.universes}"));
         }
 
         private static void DumpUniverses(IEnumerable<UniversePosition> universes)
@@ -131,7 +176,13 @@ namespace day21
         };
     }
 
-    public record UniversePosition(int Position, int Score, long Universes);
+    public record Game(
+        int Round,
+        UniversePosition Player1,
+        UniversePosition Player2
+    );
+
+    public record UniversePosition(int Player, int Position, int Score, long Universes);
 
     public class Player
     {
