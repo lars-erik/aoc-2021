@@ -57,10 +57,9 @@ namespace day21
         }
 
         [Test]
-        [Category("Slow")]
-        [TestCase(4, 8, 444356092776315, 341960390180808, TestName="Sample game is won in a bunch of universes")]
-        [TestCase(8, 1, 113467910521040, 116741133558209, TestName="Input game is won in a bunch of universes")]
-        public void Game_Is_Won_In_A_Bunch_Of_Universes(int startPosA, int startPosB, long expectedA, long expectedB)
+        [TestCase(4, 8, 444356092776315, 341960390180808, 20, TestName="Sample game is won in a bunch of universes", Category="Slow")]
+        [TestCase(8, 1, 113467910521040, 116741133558209, 20, TestName="Input game is won in a bunch of universes", Category = "Slow")]
+        public void Game_Is_Won_In_A_Bunch_Of_Universes(int startPosA, int startPosB, long expectedA, long expectedB, int maxTurns)
         {
             var wonUniverses = new List<Game>();
 
@@ -74,10 +73,9 @@ namespace day21
             };
 
             int turn = 0;
-            while(games.Any(g => g.Player1.Score < 21 && g.Player2.Score < 21 && turn < 20))
+            while(games.Any(g => g.Player1.Score < 21 && g.Player2.Score < 21 && turn < maxTurns))
             {
                 var playerIndex = turn % 2;
-                Console.WriteLine($"Player {playerIndex + 1}, turn {turn + 1}");
 
                 games = games
                     .SelectMany(g =>
@@ -105,19 +103,11 @@ namespace day21
 
                 turn++;
 
-                if (turn < 4)
-                {
-                    DumpGames(games);
-                }
-                else
-                { 
-                    DumpLeadingScores(games);
-                }
-
-                Console.WriteLine($"Player 1: {games.Where(g => g.Player1.Score >= 21).Sum(g => g.Player1.Universes)} / {games.Sum(g => g.Player1.Universes)}");
-                Console.WriteLine($"Player 2: {games.Where(g => g.Player2.Score >= 21).Sum(g => g.Player2.Universes)} / {games.Sum(g => g.Player2.Universes)}");
-
-                wonUniverses.Sum(x => x.Player1.Score > x.Player2.Score ? x.Player1.Universes : x.Player2.Universes).Dump();
+                var totalUniverses = games.Sum(x => x.Player1.Universes) + wonUniverses.Sum(x => x.Player1.Universes);
+                Console.WriteLine($"Player {playerIndex + 1}, turn {turn}");
+                Console.WriteLine("Total universes: " + totalUniverses);
+                Console.WriteLine($"Player 1: {wonUniverses.Where(g => g.Player1.Score >= 21).Sum(g => g.Player1.Universes)} / {wonUniverses.Sum(g => g.Player1.Universes)}");
+                Console.WriteLine($"Player 2: {wonUniverses.Where(g => g.Player2.Score >= 21).Sum(g => g.Player2.Universes)} / {wonUniverses.Sum(g => g.Player2.Universes)}");
                 Console.WriteLine();
             }
 
