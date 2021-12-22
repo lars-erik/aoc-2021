@@ -19,11 +19,11 @@ namespace day22
 
         [Test]
         [TestCase("SmallSample", 39)]
-        [TestCase("LargerSample", 590784)]
+        //[TestCase("LargerSample", 590784)]
         public void Are_Toggled(string resource, long expectedCubes)
         {
             var lines = Resources.GetResourceLines(typeof(Reactor_Cubes), $"day22.{resource}.txt");
-            var sets = new List<(string state, Dictionary<string, (int min, int max)> axes)>();
+            var regions = new List<Region>();
             foreach (var line in lines)
             {
                 var mainParts = line.Split(" ");
@@ -36,47 +36,56 @@ namespace day22
                     return (axis, range:(min:range[0], max:range[1]));
                 })
                     .ToDictionary(x => x.axis, x => x.range);
-                var set = (state, axes: lineRanges);
-                sets.Add(set);
+                regions.Add(new Region(state, lineRanges));
             }
 
-            var cubes = new List<Vector3>();
-            foreach (var set in sets)
+            var newRegions = new List<Region>();
+            for (var i = 0; i < regions.Count; i++)
             {
+                var region = regions[i];
 
+                var intersections = newRegions.Where(x => x.Intersects(region));
 
-                for (var x = set.axes["x"].min; x <= set.axes["x"].max; x++)
+                if (region.State == "off")
                 {
-                    for (var y = set.axes["y"].min; y <= set.axes["y"].max; y++)
+                    foreach (var toTurnOff in intersections)
                     {
-                        for (var z = set.axes["z"].min; z <= set.axes["z"].max; z++)
-                        {
-                            if (x < -50 || x > 50 || y < -50 || y > 50 || z < -50 || z > 50)
-                            {
-                                continue;
-                            }
 
-                            var vec = new Vector3(x, y, z);
-                            if (set.state == "on" && !cubes.Contains(vec))
-                            {
-                                cubes.Add(vec);
-                            }
-
-                            if (set.state == "off" && cubes.Contains(vec))
-                            {
-                                cubes.Remove(vec);
-                            }
-                        }
                     }
-
                 }
+                else
+                {
+                    
+                }
+
+                if (newRegions.Any())
+                {
+                    var intersecting = newRegions.First();
+
+                    var newRegion = intersecting.Add(region);
+                    newRegions.Remove(intersecting);
+                    newRegions.Add(newRegion);
+                }
+                else if (region.State == "on")
+                {
+                    newRegions.Add(region);
+                }
+
+
+
+                //var intersecting = newRegions.Where(x => x.Intersects(region));
+                //if (!intersecting.Any())
+                //{
+                //    if (region.State == "on")
+                //    {
+                //        newRegions.Add(region);
+                //    }
+                //}
             }
 
-            cubes.Take(100).Dump();
+            var cubeCount = 0;
 
-            Console.WriteLine(cubes.Count);
-
-            Assert.AreEqual(expectedCubes, cubes.Count);
+            Assert.AreEqual(expectedCubes, cubeCount);
         }
 
         [Test]
@@ -108,9 +117,52 @@ namespace day22
                 Console.WriteLine(vert);
             }
             Console.WriteLine();
+        }
 
+        [Test]
+        public void Size_Of_Intersection_Of_Separate_Is_Zero()
+        {
+            var cubeA = Solids.Cube(new Vector3D(1, 1, 1), new Vector3D(0, 0, 0));
+            var cubeB = Solids.Cube(new Vector3D(1, 1, 1), new Vector3D(10, 0, 0));
+            var intersect = cubeA.Intersect(cubeB);
+            Assert.AreEqual(0, intersect.Polygons.Count);
+        }
+    }
 
+    public class Region
+    {
+        private Solid solid;
+        public string State { get; }
 
+        public Region(string state, Dictionary<string, (int min, int max)> axis)
+        {
+            State = state;
+
+            double minX = axis["x"].min - .5;
+            double maxX = axis["x"].max + .5;
+            double minY = axis["y"].min - .5;
+            double maxY = axis["y"].max + .5;
+            double minZ = axis["z"].min - .5;
+            double maxZ = axis["z"].max + .5;
+            var size = new Vector3D(Math.Abs(maxX - minX), Math.Abs(maxY - minY), Math.Abs(maxZ - minZ));
+            var center = new Vector3D(minX + (maxX - minX) / 2, minY + (maxY - minY) / 2, minZ + (maxZ - minZ) / 2);
+            solid = Solids.Cube(size, center);
+        }
+
+        public Region(string state, Solid solid)
+        {
+            State = state;
+            this.solid = solid;
+        }
+
+        public bool Intersects(Region other)
+        {
+            return solid.Intersect(other.solid).Polygons.Count > 0;
+        }
+
+        public Region Add(Region other)
+        {
+            return new Region(State, solid.Union(other.solid));
         }
     }
 }
