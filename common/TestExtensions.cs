@@ -7,7 +7,11 @@ namespace common
     {
         public static void Dump(this object obj)
         {
-            Console.WriteLine(JsonConvert.SerializeObject(obj, Formatting.Indented));
+            Console.WriteLine(JsonConvert.SerializeObject(obj, new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            }));
         }
     }
 }
